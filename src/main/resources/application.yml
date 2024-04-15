@@ -1,0 +1,46 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /identity # dinh vi micro service
+# Mail configuration
+spring:
+#  mail:
+#    host: ${SPRING_MAIL_HOST:localhost}
+#    port: ${SPRING_MAIL_PORT:1025}
+#    username: ${SPRING_MAIL_USERNAME:hien123@gmail.com}
+#    password: ${SPRING_MAIL_PASSWORD:123}
+#    properties:
+#      mail:
+#        smtp:
+#          ssl:
+#            trust: '*'
+#          auth: true
+#          starttls:
+#            enable: true
+#          connectiontimeout: 5000
+#          timeout: 3000
+#          writetimeout: 5000
+
+# Database configuration
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/wooden-furniture?createDatabaseIfNotExist=true}
+    username: ${SPRING_DATASOURCE_USERNAME:admin}
+    password: ${SPRING_DATASOURCE_PASSWORD:123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+#    platform: mysql
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+#      dialect: org.hibernate.dialect.MySQLDialect
+    database: mysql
+#    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+#    properties:
+#      javax:
+#        persistence:
+#          schema-generator:
+#            create-source: metadata
+#            scripts:
+#              action: create
+#              create-target: create_data.sql # generate sql file for create schema
+

@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: wooden-furniture-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123
+      MYSQL_DATABASE: wooden-furniture
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: 123
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+#  maildev:
+#    image: maildev/maildev
+#    restart: always
+#    ports:
+#      - "1080:1080"
+#      - "1025:1025"
+
+#  spring-app:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    depends_on:
+#      - mysql
+##      - maildev
+#    restart: always
+#    ports:
+#      - "8080:8080"
+#    environment:
+##      - SPRING_MAIL_HOST=maildev
+##      - SPRING_MAIL_PORT=1025
+##      - SPRING_MAIL_USERNAME=hien789@gmail.com
+##      - SPRING_MAIL_PASSWORD=123
+#      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/db-example?createDatabaseIfNotExist=true
+#      - SPRING_DATASOURCE_USERNAME=root
+#      - SPRING_DATASOURCE_PASSWORD=123
+    # Đặt biến môi trường dựa trên môi trường Docker
+#  jdk-container:
+#    image: openjdk:16  # Chọn phiên bản JDK mong muốn
+#    volumes:
+#      - ./wooden-furniture:/app  # Đường dẫn đến thư mục chứa mã nguồn của bạn
+#    working_dir: /app
+
+
+volumes:
+  mysql_data:

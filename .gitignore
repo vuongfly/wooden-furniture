@@ -1,0 +1,37 @@
+# Compiled class file
+*.class
+
+# Log files
+*.log
+
+# IntelliJ IDEA files
+.idea/
+*.iml
+*.iws
+
+# Eclipse files
+.classpath
+.project
+.settings/
+
+# Maven files
+target/
+
+# Spring Boot configuration file
+application.properties
+
+# Package files
+*.jar
+*.war
+*.ear
+
+# Gradle files
+.gradle/
+build/
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# IDE specific directories
+.vscode/
