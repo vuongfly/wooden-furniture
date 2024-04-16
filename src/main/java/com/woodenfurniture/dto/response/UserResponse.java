@@ -16,7 +16,7 @@ public class UserResponse {
     //    Address address;
     Integer age;
     String username;
-//    String password;
+    String password;
     String email;
     String phoneNumber;
 }
