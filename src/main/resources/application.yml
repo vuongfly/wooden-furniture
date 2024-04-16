@@ -44,3 +44,5 @@ spring:
 #              action: create
 #              create-target: create_data.sql # generate sql file for create schema
 
+jwt:
+  signedKey: "IyD9WlA+4nR75TnKnkcmkivqWlrkQ2RfwESxiOlz5TeEjNciZz+dP2/5sNA5DbBw"
