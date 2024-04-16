@@ -5,7 +5,6 @@ import com.woodenfurniture.dto.request.UserUpdateRequest;
 import com.woodenfurniture.dto.response.UserResponse;
 import com.woodenfurniture.entity.User;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")

@@ -4,13 +4,11 @@ import com.woodenfurniture.dto.request.UserCreateRequest;
 import com.woodenfurniture.dto.request.UserUpdateRequest;
 import com.woodenfurniture.dto.response.ApiResponse;
 import com.woodenfurniture.dto.response.UserResponse;
-import com.woodenfurniture.entity.User;
 import com.woodenfurniture.service.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;

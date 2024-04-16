@@ -1,9 +1,5 @@
 package com.woodenfurniture.common;
 
-import org.springframework.data.annotation.Id;
-
-import java.util.Date;
-
 public class BaseModel {
 //    @Id
 //    @GeneratedValue(strategy = GenerationType.IDENTITY)
