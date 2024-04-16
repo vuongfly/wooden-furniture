@@ -4,25 +4,30 @@ import com.woodenfurniture.common.Address;
 import com.woodenfurniture.common.Gender;
 import com.woodenfurniture.validation.annotation.EmailFormat;
 import com.woodenfurniture.validation.annotation.PhoneFormat;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.NumberFormat;
 
 import javax.validation.constraints.Size;
 
 @Data
+@FieldDefaults(level= AccessLevel.PRIVATE)
 public class UserRequest {
-    private String name;
-    private Gender gender;
-    private Address address;
+    String name;
+    Gender gender;
+    Address address;
     @NumberFormat
-    private Integer age;
-    private String username;
-    private String password;
+    Integer age;
+    @Size(min = 3, message = "USERNAME_INVALID")
+    String username;
+    @Size(min = 8, message = "INVALID_PASSWORD")
+    String password;
     @EmailFormat
     @Size(max = 50)
-    private String email;
+    String email;
     @PhoneFormat
     @Size(max = 50)
-    private String phoneNumber;
+    String phoneNumber;
 
 }

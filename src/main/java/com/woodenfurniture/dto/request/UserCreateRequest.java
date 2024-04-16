@@ -1,6 +1,5 @@
 package com.woodenfurniture.dto.request;
 
-import com.woodenfurniture.common.Address;
 import com.woodenfurniture.common.Gender;
 import com.woodenfurniture.validation.annotation.EmailFormat;
 import com.woodenfurniture.validation.annotation.PhoneFormat;
@@ -19,8 +18,9 @@ public class UserCreateRequest {
 //    Address address;
     @NumberFormat
     Integer age;
+    @Size(min = 3, message = "USERNAME_INVALID")
     String username;
-    @Size(min = 8, message = "password must be at least 8 characters")
+    @Size(min = 8, message = "INVALID_PASSWORD")
     String password;
     @EmailFormat
     @Size(max = 50)

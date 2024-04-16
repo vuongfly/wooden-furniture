@@ -18,8 +18,9 @@ public class UserUpdateRequest {
 //    Address address;
     @NumberFormat
     Integer age;
+    @Size(min = 3, message = "USERNAME_INVALID")
     String username;
-    @Size(min = 8)
+    @Size(min = 8, message = "INVALID_PASSWORD")
     String password;
     @EmailFormat
     @Size(max = 50)
