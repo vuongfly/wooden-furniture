@@ -2,21 +2,21 @@ package com.woodenfurniture.entity;
 
 import com.woodenfurniture.common.Gender;
 import com.woodenfurniture.validation.annotation.EmailFormat;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import lombok.AccessLevel;
-import lombok.Data;
+import jakarta.persistence.*;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import javax.validation.constraints.Size;
 
 @Data
-@FieldDefaults(level= AccessLevel.PRIVATE)
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 public class User {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     String id;
     String name;
     @Enumerated(EnumType.STRING)

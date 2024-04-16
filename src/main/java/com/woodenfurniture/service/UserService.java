@@ -24,12 +24,13 @@ public class UserService {
     }
 
     public UserResponse getById(String userId) {
-        return mapper.toResponse(repo.findById(userId).orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND)));
+        return mapper.toResponse(repo.findById(userId).orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED)));
     }
 
     public UserResponse update(String userId, UserUpdateRequest request) {
-        User user = repo.findById(userId).orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND));
+        User user = repo.findById(userId).orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED));
         mapper.updateUser(user, request);
+        repo.save(user);
         return mapper.toResponse(user);
     }
 }
