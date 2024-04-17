@@ -5,8 +5,11 @@ import com.woodenfurniture.validation.annotation.EmailFormat;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.validation.constraints.Size;
+import java.util.Collection;
 
 @Data
 @NoArgsConstructor
@@ -14,7 +17,7 @@ import javax.validation.constraints.Size;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class User {
+public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
@@ -23,11 +26,33 @@ public class User {
     Gender gender;
 //    Address address;
     Integer age;
-    @Size(min = 3, message = "USERNAME_INVALID")
     String username;
-    @Size(min = 8, message = "INVALID_PASSWORD")
     String password;
-    @EmailFormat
     String email;
     String phoneNumber;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return false;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return false;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return false;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return false;
+    }
 }
