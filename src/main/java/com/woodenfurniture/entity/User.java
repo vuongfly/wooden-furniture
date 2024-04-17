@@ -1,15 +1,14 @@
 package com.woodenfurniture.entity;
 
-import com.woodenfurniture.common.Gender;
-import com.woodenfurniture.validation.annotation.EmailFormat;
+import com.woodenfurniture.enums.Gender;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.validation.constraints.Size;
 import java.util.Collection;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -30,6 +29,7 @@ public class User implements UserDetails {
     String password;
     String email;
     String phoneNumber;
+    Set<String> roles;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

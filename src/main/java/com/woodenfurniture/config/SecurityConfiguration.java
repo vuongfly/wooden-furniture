@@ -1,5 +1,6 @@
 package com.woodenfurniture.config;
 
+import com.woodenfurniture.enums.Role;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -12,9 +13,13 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.spec.SecretKeySpec;
@@ -50,14 +55,30 @@ public class SecurityConfiguration {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> {
-                    request.requestMatchers(HttpMethod.POST, "/users").permitAll()
-                            .requestMatchers(WHITE_LIST_URL).permitAll()
+                    request.requestMatchers(WHITE_LIST_URL).permitAll()
+//                            .requestMatchers(HttpMethod.GET, "/users").hasAuthority("ROLE_ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/users").hasRole(Role.ADMIN.name())
                             .anyRequest().authenticated();
                 });
         http.oauth2ResourceServer(oauth2 ->
-            oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder()))
+            oauth2.jwt(jwtConfigurer ->
+                    jwtConfigurer.decoder(jwtDecoder())
+                            .jwtAuthenticationConverter(jwtAuthenticationConverter()))
         );
         return http.build();
+    }
+
+    @Bean
+    JwtAuthenticationConverter jwtAuthenticationConverter () {
+        /*
+        * Default scope value will be sth like SCOPE_ADMIN
+        * This func convert it to ROLE_ADMIN
+        * */
+        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
+        return jwtAuthenticationConverter;
     }
 
     @Bean
@@ -67,6 +88,11 @@ public class SecurityConfiguration {
                 .withSecretKey(secretKeySpec)
                 .macAlgorithm(MacAlgorithm.HS512)
                 .build();
+    }
+
+    @Bean
+    PasswordEncoder passwordEncoder () {
+        return new BCryptPasswordEncoder(10);
     }
 
 }

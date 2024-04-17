@@ -1,7 +1,7 @@
 package com.woodenfurniture.dto.request;
 
 import com.woodenfurniture.common.Address;
-import com.woodenfurniture.common.Gender;
+import com.woodenfurniture.enums.Gender;
 import com.woodenfurniture.validation.annotation.EmailFormat;
 import com.woodenfurniture.validation.annotation.PhoneFormat;
 import lombok.*;
