@@ -9,6 +9,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -23,10 +25,6 @@ import java.util.List;
 @Slf4j
 public class UserController {
     UserService userService;
-//    @PostMapping
-//    ResponseEntity<UserResponse> create(@RequestBody @Valid UserCreateRequest request) {
-//        return ResponseEntity.ok(userService.create(request));
-//    }
 
     @PostMapping
     ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreateRequest request){
@@ -37,13 +35,22 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
+    @PostAuthorize("returnObject.result.username == authentication.name")
     ApiResponse<UserResponse> getById(@PathVariable String userId){
         return ApiResponse.<UserResponse>builder()
                 .result(userService.getById(userId))
                 .build();
     }
 
+    @GetMapping("/myInfo")
+    ApiResponse<UserResponse> myInfo(){
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.getMyInfo())
+                .build();
+    }
+
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<List<UserResponse>> getUsers(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         log.info("Username: {}", authentication.getName());
@@ -55,6 +62,7 @@ public class UserController {
     }
 
     @PutMapping("/{userId}")
+    @PostAuthorize("returnObject.result.username == authentication.name")
     ApiResponse<UserResponse> update(@RequestBody @Valid UserUpdateRequest request, @PathVariable String userId) {
         return ApiResponse.<UserResponse>builder()
                 .result(userService.update(userId, request))

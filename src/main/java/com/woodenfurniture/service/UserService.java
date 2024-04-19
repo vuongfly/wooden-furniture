@@ -13,6 +13,9 @@ import com.woodenfurniture.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class UserService {
     UserRepository repo;
     UserMapper mapper;
@@ -42,6 +46,14 @@ public class UserService {
 
     public UserResponse getById(String userId) {
         return mapper.toResponse(repo.findById(userId).orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED)));
+    }
+
+    public UserResponse getMyInfo() {
+        SecurityContext context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        log.info("Get info of username: {}", name);
+        return mapper.toResponse(repo.findByUsername(name)
+                .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED)));
     }
 
     public UserResponse update(String userId, UserUpdateRequest request) {
