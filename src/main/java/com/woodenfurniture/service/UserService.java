@@ -14,6 +14,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -31,6 +32,7 @@ public class UserService {
     UserRepository repo;
     UserMapper mapper;
     PasswordEncoder passwordEncoder;
+
     public UserResponse create(UserCreateRequest request) {
         if (repo.existsByUsername(request.getUsername()))
             throw new AppException(ErrorCode.USER_EXISTED);
@@ -51,9 +53,13 @@ public class UserService {
     public UserResponse getMyInfo() {
         SecurityContext context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
+
         log.info("Get info of username: {}", name);
-        return mapper.toResponse(repo.findByUsername(name)
-                .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED)));
+
+        User user = repo.findByUsername(name)
+                .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED));
+
+        return mapper.toResponse(user);
     }
 
     public UserResponse update(String userId, UserUpdateRequest request) {
@@ -63,7 +69,10 @@ public class UserService {
         return mapper.toResponse(user);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UserResponse> getUsers() {
-        return repo.findAll().stream().map(mapper::toResponse).toList();
+        log.info("In method get Users");
+        return repo.findAll().stream()
+                .map(mapper::toResponse).toList();
     }
 }
