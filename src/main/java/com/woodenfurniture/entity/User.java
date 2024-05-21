@@ -29,7 +29,8 @@ public class User implements UserDetails {
     String password;
     String email;
     String phoneNumber;
-    Set<String> roles;
+    @ManyToMany
+    Set<Role> roles;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

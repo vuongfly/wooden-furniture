@@ -1,5 +1,6 @@
 package com.woodenfurniture.dto.response;
 
+import com.woodenfurniture.entity.Role;
 import com.woodenfurniture.enums.Gender;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -21,5 +22,5 @@ public class UserResponse {
 //    String password;
     String email;
     String phoneNumber;
-    Set<String> roles;
+    Set<Role> roles;
 }

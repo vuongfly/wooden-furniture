@@ -1,7 +1,8 @@
 package com.woodenfurniture.config;
 
+import com.woodenfurniture.entity.Role;
 import com.woodenfurniture.entity.User;
-import com.woodenfurniture.enums.Role;
+import com.woodenfurniture.repository.RoleRepository;
 import com.woodenfurniture.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
+import java.util.Set;
 
 @Configuration
 @RequiredArgsConstructor
@@ -23,19 +25,29 @@ public class ApplicationInitConfig {
     PasswordEncoder passwordEncoder;
 
     @Bean
-    ApplicationRunner applicationRunner (UserRepository userRepository){
+    ApplicationRunner applicationRunner(UserRepository userRepository, RoleRepository roleRepository) {
         return args -> {
-          if (userRepository.findByUsername("admin").isEmpty()) {
-              var roles = new HashSet<String>();
-              roles.add(Role.ADMIN.name());
-              User user = User.builder()
-                      .username("admin")
-                      .password(passwordEncoder.encode("admin"))
-                      .roles(roles)
-                      .build();
-              userRepository.save(user);
-              log.warn("Admin user has been created with default password: admin");
-          }
+            Set<Role> roles = new HashSet<>();
+            if (userRepository.findByUsername("admin").isEmpty()) {
+                var roleAdmin = roleRepository.findById("ADMIN");
+                if (roleAdmin.isEmpty()) {
+                    Role role = Role.builder()
+                            .name("ADMIN")
+                            .description("Default Admin role")
+                            .build();
+                    roleRepository.save(role);
+                    roles.add(role);
+                } else {
+                    roles.add(roleAdmin.get());
+                }
+                User user = User.builder()
+                        .username("admin")
+                        .password(passwordEncoder.encode("admin"))
+                        .roles(roles)
+                        .build();
+                userRepository.save(user);
+                log.warn("Admin user has been created with default password: admin");
+            }
         };
     }
 }
