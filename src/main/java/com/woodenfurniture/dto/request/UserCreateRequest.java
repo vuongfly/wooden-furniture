@@ -8,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.NumberFormat;
 
 import javax.validation.constraints.Size;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -30,4 +31,5 @@ public class UserCreateRequest {
     @PhoneFormat
     @Size(max = 50)
     String phoneNumber;
+    List<String> roles;
 }

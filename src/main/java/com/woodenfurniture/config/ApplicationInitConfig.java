@@ -27,6 +27,7 @@ public class ApplicationInitConfig {
     @Bean
     ApplicationRunner applicationRunner(UserRepository userRepository, RoleRepository roleRepository) {
         return args -> {
+            // create default role ADMIN
             Set<Role> roles = new HashSet<>();
             if (userRepository.findByUsername("admin").isEmpty()) {
                 var roleAdmin = roleRepository.findById("ADMIN");
@@ -40,6 +41,7 @@ public class ApplicationInitConfig {
                 } else {
                     roles.add(roleAdmin.get());
                 }
+                // create default user ADMIN
                 User user = User.builder()
                         .username("admin")
                         .password(passwordEncoder.encode("admin"))
