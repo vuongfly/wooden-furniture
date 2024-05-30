@@ -35,6 +35,15 @@ public class RoleService {
         return mapper.toDto(roleRepository.save(role));
     }
 
+    public RoleResponse update(RoleRequest request) {
+        if (!roleRepository.existsByName(request.getName()))
+            throw new AppException(ErrorCode.ROLE_NOT_EXISTED);
+        var permissions = permissionRepository.findAllById(request.getPermissions());
+        Role role = mapper.toEntity(request);
+        role.setPermissions(new HashSet<>(permissions));
+        return mapper.toDto(roleRepository.save(role));
+    }
+
     public List<RoleResponse> getAll() {
         return roleRepository.findAll()
                 .stream()

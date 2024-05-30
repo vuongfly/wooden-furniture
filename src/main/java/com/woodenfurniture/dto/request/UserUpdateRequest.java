@@ -8,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.NumberFormat;
 
 import javax.validation.constraints.Size;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -17,17 +18,17 @@ import javax.validation.constraints.Size;
 public class UserUpdateRequest {
     String name;
     Gender gender;
-//    Address address;
     @NumberFormat
     Integer age;
     @Size(min = 3, message = "USERNAME_INVALID")
 //    String username;
 //    @Size(min = 8, message = "INVALID_PASSWORD")
-//    String password;
+    String password;
     @EmailFormat
     @Size(max = 50)
     String email;
     @PhoneFormat
     @Size(max = 50)
     String phoneNumber;
+    List<String> roles;
 }

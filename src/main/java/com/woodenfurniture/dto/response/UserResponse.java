@@ -1,8 +1,11 @@
 package com.woodenfurniture.dto.response;
 
-import com.woodenfurniture.entity.Role;
 import com.woodenfurniture.enums.Gender;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.util.Set;
@@ -16,11 +19,9 @@ public class UserResponse {
     String id;
     String name;
     Gender gender;
-    //    Address address;
     Integer age;
     String username;
-//    String password;
     String email;
     String phoneNumber;
-    Set<Role> roles;
+    Set<RoleResponse> roles;
 }

@@ -57,7 +57,8 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(request -> {
                     request.requestMatchers(WHITE_LIST_URL).permitAll()
 //                            .requestMatchers(HttpMethod.GET, "/users").hasAuthority("ROLE_ADMIN")
-//                            .requestMatchers(HttpMethod.GET, "/users").hasRole(Role.ADMIN.name())
+                            .requestMatchers(HttpMethod.GET, "/users").hasRole(Role.ADMIN.name())
+                            .requestMatchers("/**").hasRole(Role.ADMIN.name())
                             .anyRequest().authenticated();
                 });
         http.oauth2ResourceServer(oauth2 ->
@@ -72,11 +73,11 @@ public class SecurityConfiguration {
     @Bean
     JwtAuthenticationConverter jwtAuthenticationConverter () {
         /*
-        * Default scope value will be sth like SCOPE_ADMIN
-        * This func convert it to ROLE_ADMIN
+        * set prefix for authority Scope
         * */
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+//        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
         return jwtAuthenticationConverter;

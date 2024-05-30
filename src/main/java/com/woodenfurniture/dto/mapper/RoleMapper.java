@@ -14,5 +14,7 @@ public interface RoleMapper {
     @Mapping(target = "permissions", ignore = true)
     Role toEntity(RoleRequest request);
     RoleResponse toDto(Role entity);
+
+    @Mapping(target = "roles", ignore = true)
     void updateUser(@MappingTarget User user, UserUpdateRequest request);
 }
