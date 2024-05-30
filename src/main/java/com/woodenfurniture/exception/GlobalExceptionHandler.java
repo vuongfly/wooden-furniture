@@ -1,6 +1,7 @@
 package com.woodenfurniture.exception;
 
 import com.woodenfurniture.dto.response.ApiResponse;
+import jakarta.validation.ConstraintViolation;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,6 +11,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import java.util.Map;
 
 @ControllerAdvice
 @Slf4j
@@ -65,9 +68,18 @@ public class GlobalExceptionHandler {
         String enumKey = ex.getFieldError().getDefaultMessage();
 
         ErrorCode errorCode = ErrorCode.INVALID_KEY;
-
+        Map<String, Object> attributes = null;
         try {
             errorCode = ErrorCode.valueOf(enumKey);
+//            var constraintViolation = ex.getBindingResult()
+//                    .getAllErrors()
+//                    .getFirst()
+//                    .unwrap(ConstraintViolation.class);
+//
+//            attributes = constraintViolation.getConstraintDescriptor().getAttributes();
+//
+//            log.info(attributes.toString());
+
         } catch (IllegalArgumentException e) {
             //log error
         }
@@ -81,17 +93,6 @@ public class GlobalExceptionHandler {
                 .body(apiResponse);
     }
 
-//    @ExceptionHandler(value = AccessDeniedException.class)
-//    ResponseEntity<ApiResponse> handlingAccessDeniedException(AccessDeniedException ex) {
-//        ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
-//
-//        return ResponseEntity.status(errorCode.getStatusCode())
-//                .body(ApiResponse.builder()
-//                        .code(errorCode.getCode())
-//                        .message(errorCode.getMessage())
-//                        .build()
-//                );
-//    }
 
     @ExceptionHandler(value = AccessDeniedException.class)
     ResponseEntity<ApiResponse> handlingAccessDeniedException(AccessDeniedException exception){

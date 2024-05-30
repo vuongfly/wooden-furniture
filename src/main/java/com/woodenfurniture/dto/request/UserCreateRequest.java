@@ -1,6 +1,7 @@
 package com.woodenfurniture.dto.request;
 
 import com.woodenfurniture.enums.Gender;
+import com.woodenfurniture.validation.annotation.DobConstraint;
 import com.woodenfurniture.validation.annotation.EmailFormat;
 import com.woodenfurniture.validation.annotation.PhoneFormat;
 import lombok.*;
@@ -8,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.NumberFormat;
 
 import javax.validation.constraints.Size;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -18,7 +20,6 @@ import java.util.List;
 public class UserCreateRequest {
     String name;
     Gender gender;
-//    Address address;
     @NumberFormat
     Integer age;
     @Size(min = 3, message = "USERNAME_INVALID")
@@ -32,4 +33,6 @@ public class UserCreateRequest {
     @Size(max = 50)
     String phoneNumber;
     List<String> roles;
+    @DobConstraint(message = "INVALID_DOB", min = 18)
+    LocalDate dob;
 }
