@@ -52,6 +52,14 @@ public class AuthenticationService {
     @Value(("${jwt.signerKey}"))
     protected String SIGNER_KEY;
 
+    @NonFinal
+    @Value(("${jwt.valid-duration}"))
+    protected long VALID_DURATION;
+
+    @NonFinal
+    @Value(("${jwt.refresh-duration}"))
+    protected long REFRESH_DURATION;
+
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         var user = repo.findByUsername(request.getUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
@@ -83,22 +91,27 @@ public class AuthenticationService {
     }
 
     public void logout(LogoutRequest request) throws ParseException, JOSEException {
-        var signToken = verifyToken(request.getToken());
-        String jit = signToken.getJWTClaimsSet().getJWTID();
-        Date expiryDate = signToken.getJWTClaimsSet().getExpirationTime();
+        try {
+            var signToken = verifyToken(request.getToken(), true); // why true? if not, the token can be used to refresh token
+            String jit = signToken.getJWTClaimsSet().getJWTID();
+            Date expiryDate = signToken.getJWTClaimsSet().getExpirationTime();
 
-        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
-                .id(jit)
-                .expiryTime(expiryDate)
-                .build();
+            InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                    .id(jit)
+                    .expiryTime(expiryDate)
+                    .build();
 
-        // save invalidated token to database
-        invalidatedTokenRepository.save(invalidatedToken);
+            // save invalidated token to database
+            invalidatedTokenRepository.save(invalidatedToken);
+        } catch (AppException e) {
+            // swallow exception if token is already expired from verifyToken method
+            log.info("Token already expired");
+        }
     }
 
     public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
         // verify token
-        SignedJWT signedJWT = verifyToken(request.getToken());
+        SignedJWT signedJWT = verifyToken(request.getToken(), true);
         var jit = signedJWT.getJWTClaimsSet().getJWTID();
         var expiryDate = signedJWT.getJWTClaimsSet().getExpirationTime();
 
@@ -122,7 +135,7 @@ public class AuthenticationService {
                 .build();
     }
 
-    private SignedJWT verifyToken(String token) throws ParseException, JOSEException {
+    private SignedJWT verifyToken(String token, boolean isRefresh) throws ParseException, JOSEException {
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
         SignedJWT signedJWT = null;
 
@@ -139,7 +152,9 @@ public class AuthenticationService {
         var verified = signedJWT.verify(verifier);
 
         // check if token is expired
-        Date expiryDate = signedJWT.getJWTClaimsSet().getExpirationTime();
+        Date expiryDate = (isRefresh)
+                ? Date.from(signedJWT.getJWTClaimsSet().getIssueTime().toInstant().plus(REFRESH_DURATION, ChronoUnit.SECONDS))
+                : signedJWT.getJWTClaimsSet().getExpirationTime();
         if (!(verified && expiryDate.after(new Date())))
             throw new AppException(ErrorCode.UNAUTHENTICATED);
 
@@ -150,6 +165,10 @@ public class AuthenticationService {
         return signedJWT;
     }
 
+    private SignedJWT verifyToken(String token) throws ParseException, JOSEException {
+        return verifyToken(token, false);
+    }
+
     private String generateToken(User user) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
@@ -157,7 +176,7 @@ public class AuthenticationService {
                 .issuer("vuongfly")
                 .issueTime(new Date()) // add issue time
                 .expirationTime(new Date(
-                        Instant.now().plus(1000, ChronoUnit.HOURS).toEpochMilli()
+                        Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()
                 )) // add expiration time
                 .jwtID(UUID.randomUUID().toString())    // add unique id for token
                 .claim("scope", buildScope(user))   // add default scope refer to user roles follow oauth2's standard
