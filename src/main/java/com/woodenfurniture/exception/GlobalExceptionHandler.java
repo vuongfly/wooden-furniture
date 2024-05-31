@@ -8,11 +8,13 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.util.Map;
+import java.util.Objects;
 
 @ControllerAdvice
 @Slf4j
@@ -71,14 +73,16 @@ public class GlobalExceptionHandler {
         Map<String, Object> attributes = null;
         try {
             errorCode = ErrorCode.valueOf(enumKey);
-//            var constraintViolation = ex.getBindingResult()
-//                    .getAllErrors()
-//                    .getFirst()
-//                    .unwrap(ConstraintViolation.class);
-//
-//            attributes = constraintViolation.getConstraintDescriptor().getAttributes();
-//
-//            log.info(attributes.toString());
+            var temp = ex.getBindingResult().getAllErrors();
+            var constraintViolation = ex.getBindingResult()
+                    .getAllErrors().stream()
+                    .findFirst()
+                    .map(error -> error.unwrap(ConstraintViolation.class))
+                    .orElse(null);
+            if (constraintViolation != null) {
+                attributes = constraintViolation.getConstraintDescriptor().getAttributes();
+//                log.info(attributes.toString());
+            }
 
         } catch (IllegalArgumentException e) {
             //log error
@@ -86,7 +90,9 @@ public class GlobalExceptionHandler {
         ApiResponse apiResponse = new ApiResponse<>();
 
         apiResponse.setCode(errorCode.getCode());
-        apiResponse.setMessage(errorCode.getMessage());
+        apiResponse.setMessage(Objects.nonNull(attributes) ?
+                mapAttribute(errorCode.getMessage(), attributes)
+                : errorCode.getMessage());
 
         return ResponseEntity
                 .status(errorCode.getStatusCode())
@@ -104,6 +110,14 @@ public class GlobalExceptionHandler {
                         .message(errorCode.getMessage())
                         .build()
         );
+    }
+
+    private String mapAttribute(String message, Map<String, Object> attributes){
+        // replace message with key in attributes to value in attributes
+        for (Map.Entry<String, Object> entry : attributes.entrySet()) {
+            message = message.replace("{" + entry.getKey() + "}", entry.getValue().toString());
+        }
+        return message;
     }
 
     @Getter

@@ -74,7 +74,7 @@ public class AuthenticationService {
                 .issuer("vuongfly")
                 .issueTime(new Date())
                 .expirationTime(new Date(
-                        Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
+                        Instant.now().plus(1000, ChronoUnit.HOURS).toEpochMilli()
                 ))
                 .claim("scope", buildScope(user)) // add default scope refer to user roles follow oauth2's standard
                 .build();
