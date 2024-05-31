@@ -3,7 +3,6 @@ package com.woodenfurniture.validation.annotation;
 import com.woodenfurniture.validation.validator.DobValidator;
 import jakarta.validation.Constraint;
 
-
 import javax.validation.Payload;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

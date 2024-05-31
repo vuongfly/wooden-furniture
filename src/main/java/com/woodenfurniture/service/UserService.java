@@ -5,7 +5,6 @@ import com.woodenfurniture.dto.request.UserCreateRequest;
 import com.woodenfurniture.dto.request.UserUpdateRequest;
 import com.woodenfurniture.dto.response.UserResponse;
 import com.woodenfurniture.entity.User;
-import com.woodenfurniture.enums.Role;
 import com.woodenfurniture.exception.AppException;
 import com.woodenfurniture.exception.ErrorCode;
 import com.woodenfurniture.exception.UserNotFoundException;

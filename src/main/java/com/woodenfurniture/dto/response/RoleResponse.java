@@ -1,7 +1,6 @@
 package com.woodenfurniture.dto.response;
 
 import com.woodenfurniture.entity.Permission;
-import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

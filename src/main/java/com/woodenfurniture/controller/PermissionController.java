@@ -1,7 +1,6 @@
 package com.woodenfurniture.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.woodenfurniture.dto.request.PermissionRequest;
 import com.woodenfurniture.dto.response.ApiResponse;
 import com.woodenfurniture.dto.response.PermissionResponse;

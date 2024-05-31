@@ -4,7 +4,6 @@ import com.woodenfurniture.dto.mapper.PermissionMapper;
 import com.woodenfurniture.dto.request.PermissionRequest;
 import com.woodenfurniture.dto.response.PermissionResponse;
 import com.woodenfurniture.entity.Permission;
-import com.woodenfurniture.enums.Role;
 import com.woodenfurniture.exception.AppException;
 import com.woodenfurniture.exception.ErrorCode;
 import com.woodenfurniture.repository.PermissionRepository;
@@ -12,13 +11,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.List;
 
 @Service

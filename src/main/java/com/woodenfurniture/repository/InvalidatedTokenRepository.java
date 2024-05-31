@@ -1,10 +1,9 @@
 package com.woodenfurniture.repository;
 
-import com.woodenfurniture.entity.Permission;
+import com.woodenfurniture.entity.InvalidatedToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PermissionRepository extends JpaRepository<Permission, String> {
-    boolean existsByName(String name);
+public interface InvalidatedTokenRepository extends JpaRepository<InvalidatedToken, String> {
 }

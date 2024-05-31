@@ -3,6 +3,7 @@ package com.woodenfurniture.controller;
 import com.nimbusds.jose.JOSEException;
 import com.woodenfurniture.dto.request.AuthenticationRequest;
 import com.woodenfurniture.dto.request.IntrospectRequest;
+import com.woodenfurniture.dto.request.LogoutRequest;
 import com.woodenfurniture.dto.response.ApiResponse;
 import com.woodenfurniture.dto.response.AuthenticationResponse;
 import com.woodenfurniture.dto.response.IntrospectResponse;
@@ -41,4 +42,11 @@ public class AuthenticationController {
                 .build();
     }
 
+    @PostMapping("/logout")
+    ApiResponse<Void> authenticate(@RequestBody LogoutRequest request)
+            throws ParseException, JOSEException {
+        authenticationService.logout(request);
+        return ApiResponse.<Void>builder()
+                .build();
+    }
 }

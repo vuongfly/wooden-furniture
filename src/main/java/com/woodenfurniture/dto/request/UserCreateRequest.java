@@ -4,7 +4,11 @@ import com.woodenfurniture.enums.Gender;
 import com.woodenfurniture.validation.annotation.DobConstraint;
 import com.woodenfurniture.validation.annotation.EmailFormat;
 import com.woodenfurniture.validation.annotation.PhoneFormat;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.NumberFormat;
 

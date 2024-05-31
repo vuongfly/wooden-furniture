@@ -9,14 +9,20 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Date;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class Permission {
+/*
+* this class is used to store invalidated tokens
+* TODO: need to run a scheduler to delete expired tokens
+* */
+public class InvalidatedToken {
     @Id
-    String name;
-    String description;
+    String id;
+    Date expiryTime;
 }

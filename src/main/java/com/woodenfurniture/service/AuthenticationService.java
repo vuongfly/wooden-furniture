@@ -1,17 +1,25 @@
 package com.woodenfurniture.service;
 
-import com.nimbusds.jose.*;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.woodenfurniture.dto.request.AuthenticationRequest;
 import com.woodenfurniture.dto.request.IntrospectRequest;
+import com.woodenfurniture.dto.request.LogoutRequest;
 import com.woodenfurniture.dto.response.AuthenticationResponse;
 import com.woodenfurniture.dto.response.IntrospectResponse;
+import com.woodenfurniture.entity.InvalidatedToken;
 import com.woodenfurniture.entity.User;
 import com.woodenfurniture.exception.AppException;
 import com.woodenfurniture.exception.ErrorCode;
+import com.woodenfurniture.repository.InvalidatedTokenRepository;
 import com.woodenfurniture.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -29,17 +37,20 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.StringJoiner;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class AuthenticationService {
+    private final InvalidatedTokenRepository invalidatedTokenRepository;
     UserRepository repo;
 
     @NonFinal
     @Value(("${jwt.signerKey}"))
     protected String SIGNER_KEY;
+
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         var user = repo.findByUsername(request.getUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
@@ -57,14 +68,59 @@ public class AuthenticationService {
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         var token = request.getToken();
-        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
-        SignedJWT signedJWT = SignedJWT.parse(token);
-        Date expiryDate = signedJWT.getJWTClaimsSet().getExpirationTime();
-        var verified = signedJWT.verify(verifier);
+        boolean isValid = true;
+
+        try {
+            verifyToken(token);
+        } catch (AppException e) {
+            isValid = false;
+        }
 
         return IntrospectResponse.builder()
-                .valid(verified && expiryDate.after(new Date()))
+                .valid(isValid)
                 .build();
+    }
+
+    public void logout(LogoutRequest request) throws ParseException, JOSEException {
+        var signToken = verifyToken(request.getToken());
+        String jit = signToken.getJWTClaimsSet().getJWTID();
+        Date expiryDate = signToken.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(jit)
+                .expiryTime(expiryDate)
+                .build();
+
+        // save invalidated token to database
+        invalidatedTokenRepository.save(invalidatedToken);
+    }
+
+    private SignedJWT verifyToken(String token) throws ParseException, JOSEException {
+        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+        SignedJWT signedJWT = null;
+
+        try {
+            // parse token
+            signedJWT = SignedJWT.parse(token);
+        } catch (ParseException e) {
+            throw new AppException(ErrorCode.INVALID_TOKEN);
+        }
+
+        // verify token
+        if (!signedJWT.verify(verifier))
+            throw new AppException(ErrorCode.INVALID_TOKEN);
+        var verified = signedJWT.verify(verifier);
+
+        // check if token is expired
+        Date expiryDate = signedJWT.getJWTClaimsSet().getExpirationTime();
+        if (!(verified && expiryDate.after(new Date())))
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+
+        // check if token is disabled/invalidated
+        if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID()))
+            throw new AppException(ErrorCode.TOKEN_DISABLED);
+
+        return signedJWT;
     }
 
     private String generateToken(User user) {
@@ -72,16 +128,17 @@ public class AuthenticationService {
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getUsername())
                 .issuer("vuongfly")
-                .issueTime(new Date())
+                .issueTime(new Date()) // add issue time
                 .expirationTime(new Date(
                         Instant.now().plus(1000, ChronoUnit.HOURS).toEpochMilli()
-                ))
-                .claim("scope", buildScope(user)) // add default scope refer to user roles follow oauth2's standard
+                )) // add expiration time
+                .jwtID(UUID.randomUUID().toString())    // add unique id for token
+                .claim("scope", buildScope(user))   // add default scope refer to user roles follow oauth2's standard
                 .build();
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
         JWSObject jwsObject = new JWSObject(header, payload);
         try {
-            jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
+            jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes())); // sign token with signer key
             return jwsObject.serialize();
         } catch (JOSEException e) {
             log.error("Cannot generate token: ", e);
