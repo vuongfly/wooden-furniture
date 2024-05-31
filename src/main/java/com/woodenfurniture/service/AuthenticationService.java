@@ -13,6 +13,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.woodenfurniture.dto.request.AuthenticationRequest;
 import com.woodenfurniture.dto.request.IntrospectRequest;
 import com.woodenfurniture.dto.request.LogoutRequest;
+import com.woodenfurniture.dto.request.RefreshRequest;
 import com.woodenfurniture.dto.response.AuthenticationResponse;
 import com.woodenfurniture.dto.response.IntrospectResponse;
 import com.woodenfurniture.entity.InvalidatedToken;
@@ -93,6 +94,32 @@ public class AuthenticationService {
 
         // save invalidated token to database
         invalidatedTokenRepository.save(invalidatedToken);
+    }
+
+    public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
+        // verify token
+        SignedJWT signedJWT = verifyToken(request.getToken());
+        var jit = signedJWT.getJWTClaimsSet().getJWTID();
+        var expiryDate = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        // logout current token
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(jit)
+                .expiryTime(expiryDate)
+                .build();
+
+        // save invalidated token to database
+        invalidatedTokenRepository.save(invalidatedToken);
+
+        // generate new token
+        var username = signedJWT.getJWTClaimsSet().getSubject();
+        var user = repo.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        var token = generateToken(user);
+        return AuthenticationResponse.builder()
+                .token(token)
+                .authenticated(true)
+                .build();
     }
 
     private SignedJWT verifyToken(String token) throws ParseException, JOSEException {

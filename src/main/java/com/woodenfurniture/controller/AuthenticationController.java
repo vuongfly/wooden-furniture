@@ -4,6 +4,7 @@ import com.nimbusds.jose.JOSEException;
 import com.woodenfurniture.dto.request.AuthenticationRequest;
 import com.woodenfurniture.dto.request.IntrospectRequest;
 import com.woodenfurniture.dto.request.LogoutRequest;
+import com.woodenfurniture.dto.request.RefreshRequest;
 import com.woodenfurniture.dto.response.ApiResponse;
 import com.woodenfurniture.dto.response.AuthenticationResponse;
 import com.woodenfurniture.dto.response.IntrospectResponse;
@@ -43,10 +44,19 @@ public class AuthenticationController {
     }
 
     @PostMapping("/logout")
-    ApiResponse<Void> authenticate(@RequestBody LogoutRequest request)
+    ApiResponse<Void> logout(@RequestBody LogoutRequest request)
             throws ParseException, JOSEException {
         authenticationService.logout(request);
         return ApiResponse.<Void>builder()
+                .build();
+    }
+
+    @PostMapping("/refresh")
+    ApiResponse<AuthenticationResponse> refresh(@RequestBody RefreshRequest request)
+            throws ParseException, JOSEException {
+        var result = authenticationService.refreshToken(request);
+        return ApiResponse.<AuthenticationResponse>builder()
+                .result(result)
                 .build();
     }
 }
