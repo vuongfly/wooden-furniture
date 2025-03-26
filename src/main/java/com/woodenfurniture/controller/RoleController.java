@@ -47,9 +47,16 @@ public class RoleController {
     }
 
     @GetMapping
-    public ApiResponse<List<RoleResponse>> getAllPermissions() throws JsonProcessingException {
+    public ApiResponse<List<RoleResponse>> getAllPermissions() {
         return ApiResponse.<List<RoleResponse>>builder()
                 .result(service.getAll())
+                .build();
+    }
+
+    @GetMapping("/{roleName}")
+    public ApiResponse<RoleResponse> getAllPermissions(@PathVariable String roleName) {
+        return ApiResponse.<RoleResponse>builder()
+                .result(service.getByName(roleName))
                 .build();
     }
 

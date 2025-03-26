@@ -44,6 +44,10 @@ public class RoleService {
         return mapper.toDto(roleRepository.save(role));
     }
 
+    public RoleResponse getByName(String roleName) {
+        return mapper.toDto(roleRepository.findByName(roleName).orElse(null));
+    }
+
     public List<RoleResponse> getAll() {
         return roleRepository.findAll()
                 .stream()
