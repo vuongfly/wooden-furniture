@@ -1,6 +1,5 @@
 package com.woodenfurniture.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.woodenfurniture.dto.request.RoleRequest;
 import com.woodenfurniture.dto.response.ApiResponse;
 import com.woodenfurniture.dto.response.RoleResponse;

@@ -1,7 +1,6 @@
 package com.woodenfurniture.mapper;
 
 import com.woodenfurniture.dto.ChartRequest;
-import com.woodenfurniture.dto.request.ChartSearchRequest;
 import com.woodenfurniture.dto.response.ChartResponse;
 import com.woodenfurniture.entity.Chart;
 import org.mapstruct.Mapper;
