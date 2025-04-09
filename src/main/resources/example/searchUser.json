@@ -1,0 +1,27 @@
+{
+  "criteria": [
+    {
+      "property": "email",
+      "operator": "LIKE",
+      "value": "example.com",
+      "type": "STRING"
+    },
+    {
+      "property": "role",
+      "operator": "EQUALS",
+      "value": "ADMIN",
+      "type": "STRING"
+    },
+    {
+      "property": "createdAt",
+      "operator": "BETWEEN",
+      "value": "2023-01-01T00:00:00,2023-12-31T23:59:59",
+      "type": "DATETIME"
+    }
+  ],
+  "includeDeleted": false,
+  "sortBy": "username",
+  "sortDirection": "ASC",
+  "page": 0,
+  "size": 10
+}
