@@ -1,5 +1,6 @@
 package com.woodenfurniture.dto.response;
 
+import com.woodenfurniture.dto.BaseDTO;
 import com.woodenfurniture.enums.Gender;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -16,8 +17,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserResponse {
-    String id;
+public class UserResponse extends BaseDTO {
     String name;
     Gender gender;
     Integer age;

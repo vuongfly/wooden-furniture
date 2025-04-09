@@ -1,19 +1,18 @@
 package com.woodenfurniture.entity;
 
+import com.woodenfurniture.common.BaseEntity;
 import com.woodenfurniture.enums.Gender;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.SuperBuilder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -24,13 +23,11 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class User implements UserDetails {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    String id;
+@EqualsAndHashCode(callSuper = true)
+public class User extends BaseEntity implements UserDetails {
     String name;
     @Enumerated(EnumType.STRING)
     Gender gender;

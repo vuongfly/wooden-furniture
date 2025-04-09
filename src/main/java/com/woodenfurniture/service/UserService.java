@@ -1,6 +1,9 @@
 package com.woodenfurniture.service;
 
+import com.woodenfurniture.config.excel.SimpleExcelConfig;
+import com.woodenfurniture.config.excel.SimpleExcelConfigReader;
 import com.woodenfurniture.dto.mapper.UserMapper;
+import com.woodenfurniture.dto.request.BaseSearchRequest;
 import com.woodenfurniture.dto.request.UserCreateRequest;
 import com.woodenfurniture.dto.request.UserUpdateRequest;
 import com.woodenfurniture.dto.response.UserResponse;
@@ -10,8 +13,10 @@ import com.woodenfurniture.exception.ErrorCode;
 import com.woodenfurniture.exception.UserNotFoundException;
 import com.woodenfurniture.repository.RoleRepository;
 import com.woodenfurniture.repository.UserRepository;
+import com.woodenfurniture.service.impl.BaseServiceImpl;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,34 +24,51 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
-public class UserService {
+public class UserService extends BaseServiceImpl<User, Long, UserResponse> {
+    
     UserRepository userRepository;
     RoleRepository roleRepository;
-    UserMapper mapper;
+    UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    
+    public UserService(UserRepository userRepository,
+                      RoleRepository roleRepository,
+                      UserMapper userMapper,
+                      PasswordEncoder passwordEncoder,
+                      ExcelService excelService,
+                      SimpleExcelConfigReader excelConfigReader) {
+        super(userRepository, User.class, excelService, userMapper, excelConfigReader);
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
+    }
 
+    @Transactional
     public UserResponse create(UserCreateRequest request) {
         if (userRepository.existsByUsername(request.getUsername()))
             throw new AppException(ErrorCode.USER_EXISTED);
 
-        User user = mapper.toEntity(request);
+        User user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         var roles = roleRepository.findAllById(request.getRoles());
         user.setRoles(new HashSet<>(roles));
 
-        return mapper.toResponse(userRepository.save(user));
+        return userMapper.toResponse(userRepository.save(user));
     }
 
     public UserResponse getById(String userId) {
-        return mapper.toResponse(userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED)));
+        return userMapper.toResponse(userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED)));
     }
 
     public UserResponse getMyInfo() {
@@ -58,26 +80,47 @@ public class UserService {
         User user = userRepository.findByUsername(name)
                 .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED));
 
-        return mapper.toResponse(user);
+        return userMapper.toResponse(user);
     }
 
+    @Transactional
     public UserResponse update(String userId, UserUpdateRequest request) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED));
+        User user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED));
 
-        mapper.updateUser(user, request);
+        userMapper.updateUser(user, request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         var roles = roleRepository.findAllById(request.getRoles());
         user.setRoles(new HashSet<>(roles));
 
-        return mapper.toResponse(userRepository.save(user));
+        return userMapper.toResponse(userRepository.save(user));
     }
 
-//    @PreAuthorize("hasRole('ADMIN')") // check authority with prefix ROLE_
     @PreAuthorize("hasAuthority('READ_USER')")
     public List<UserResponse> getUsers() {
         log.info("In method get Users");
         return userRepository.findAll().stream()
-                .map(mapper::toResponse).toList();
+                .map(userMapper::toResponse).toList();
+    }
+    
+    @Override
+    protected String getImportConfigPath() {
+        return "config/excel/user-import-config.json";
+    }
+    
+    @Override
+    protected String getExportConfigPath() {
+        return "config/excel/user-export-config.json";
+    }
+
+    @Override
+    @SneakyThrows
+    protected Map<User, String> validateEntities(List<User> entities, SimpleExcelConfig config) {
+        // Use the base implementation for common validation
+        Map<User, String> validationErrors = super.validateEntities(entities, config);
+        
+        // Add any user-specific validation here if needed
+        return validationErrors;
     }
 }

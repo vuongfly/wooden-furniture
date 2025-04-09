@@ -1,6 +1,8 @@
 package com.woodenfurniture.service.impl;
 
 import com.woodenfurniture.common.BaseEntity;
+import com.woodenfurniture.config.excel.SimpleExcelConfig;
+import com.woodenfurniture.config.excel.SimpleExcelConfigReader;
 import com.woodenfurniture.dto.request.BaseSearchRequest;
 import com.woodenfurniture.exception.ResourceNotFoundException;
 import com.woodenfurniture.mapper.BaseMapper;
@@ -9,6 +11,7 @@ import com.woodenfurniture.service.BaseService;
 import com.woodenfurniture.service.ExcelService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,8 +24,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.springframework.security.util.FieldUtils.getFieldValue;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -32,6 +38,7 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, DTO> implements 
     protected final Class<T> entityClass;
     protected final ExcelService excelService;
     protected final BaseMapper<T, DTO> mapper;
+    protected final SimpleExcelConfigReader excelConfigReader;
 
     @Override
     @Transactional
@@ -110,11 +117,14 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, DTO> implements 
             // Get the configuration file path for this entity
             String configPath = getImportConfigPath();
             
+            // Read the configuration
+            SimpleExcelConfig config = excelConfigReader.readConfig(configPath);
+            
             // Import data from Excel using the configuration
             List<T> entities = excelService.importFromExcelWithConfigFile(file, configPath, entityClass);
             
             // Validate the imported entities
-            Map<T, String> validationResults = validateEntities(entities);
+            Map<T, String> validationResults = validateEntities(entities, config);
             
             // Save valid entities to the database
             for (T entity : entities) {
@@ -312,9 +322,162 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, DTO> implements 
     protected abstract String getExportConfigPath();
     
     /**
-     * Validate entities
+     * Validate entities based on configuration
      * @param entities Entities to validate
+     * @param config Excel configuration
      * @return Map of entity to validation error message
      */
-    protected abstract Map<T, String> validateEntities(List<T> entities);
+    @SneakyThrows
+    protected Map<T, String> validateEntities(List<T> entities, SimpleExcelConfig config) {
+        Map<T, String> validationErrors = new HashMap<>();
+        
+        for (T entity : entities) {
+            StringBuilder errorMessage = new StringBuilder();
+            
+            for (SimpleExcelConfig.ColumnMapping column : config.getColumn()) {
+                String fieldName = column.getField();
+                Object value = getFieldValue(entity, fieldName);
+                
+                // Required field validation
+                if (column.isRequired() && (value == null || 
+                    (value instanceof String && ((String) value).trim().isEmpty()))) {
+                    errorMessage.append(String.format("%s is required. ", column.getHeaderExcel()));
+                    continue;
+                }
+                
+                // Type validation
+                if (value != null) {
+                    String typeError = validateFieldType(value, column);
+                    if (typeError != null) {
+                        errorMessage.append(typeError);
+                    }
+                }
+                
+                // Unique validation
+                if (column.isUnique() && value != null) {
+                    String uniqueError = validateUniqueField(entity, fieldName, value);
+                    if (uniqueError != null) {
+                        errorMessage.append(uniqueError);
+                    }
+                }
+            }
+            
+            // Add custom validation if needed
+            String customValidationError = validateEntity(entity);
+            if (customValidationError != null) {
+                errorMessage.append(customValidationError);
+            }
+            
+            // If there are validation errors, add them to the map
+            if (errorMessage.length() > 0) {
+                validationErrors.put(entity, errorMessage.toString().trim());
+            }
+        }
+        
+        return validationErrors;
+    }
+    
+    /**
+     * Validate field type
+     * @param value Field value
+     * @param column Column configuration
+     * @return Error message if validation fails, null otherwise
+     */
+    protected String validateFieldType(Object value, SimpleExcelConfig.ColumnMapping column) {
+        if (value == null) {
+            return null;
+        }
+        
+        try {
+            // First check the basic type
+            switch (column.getType()) {
+                case STRING:
+                    if (!(value instanceof String)) {
+                        return String.format("%s must be text. ", column.getHeaderExcel());
+                    }
+                    break;
+                case NUMBER:
+                    if (!(value instanceof Number)) {
+                        return String.format("%s must be a number. ", column.getHeaderExcel());
+                    }
+                    break;
+                case DATE:
+                    if (!(value instanceof java.time.LocalDateTime)) {
+                        return String.format("%s must be a valid date. ", column.getHeaderExcel());
+                    }
+                    break;
+                case BOOLEAN:
+                    if (!(value instanceof Boolean)) {
+                        return String.format("%s must be true or false. ", column.getHeaderExcel());
+                    }
+                    break;
+                case EMAIL:
+                    if (!(value instanceof String) || !((String) value).matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                        return String.format("%s must be a valid email address. ", column.getHeaderExcel());
+                    }
+                    break;
+                case PHONE:
+                    if (!(value instanceof String) || !((String) value).matches("^\\+?[0-9]{10,15}$")) {
+                        return String.format("%s must be a valid phone number. ", column.getHeaderExcel());
+                    }
+                    break;
+            }
+            
+            // Then check regex pattern if specified
+            if (value instanceof String && column.getRegex() != null && !column.getRegex().isEmpty()) {
+                String stringValue = (String) value;
+                if (!stringValue.matches(column.getRegex())) {
+                    // Use custom error message if provided, otherwise use default
+                    String errorMessage = column.getRegexErrorMessage();
+                    if (errorMessage == null || errorMessage.isEmpty()) {
+                        errorMessage = String.format("%s does not match the required pattern. ", column.getHeaderExcel());
+                    }
+                    return errorMessage;
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error validating field type for {}: {}", column.getField(), e.getMessage());
+            return String.format("Invalid format for %s. ", column.getHeaderExcel());
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Validate unique field
+     * @param entity Entity to validate
+     * @param fieldName Field name
+     * @param value Field value
+     * @return Error message if validation fails, null otherwise
+     */
+    protected String validateUniqueField(Object entity, String fieldName, Object value) {
+        try {
+            // Convert field name to method name (e.g., "username" -> "existsByUsername")
+            String methodName = "existsBy" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+            
+            // Get the method from repository
+            java.lang.reflect.Method method = repository.getClass().getMethod(methodName, value.getClass());
+            
+            // Invoke the method
+            Boolean exists = (Boolean) method.invoke(repository, value);
+            
+            if (Boolean.TRUE.equals(exists)) {
+                return String.format("%s already exists. ", fieldName);
+            }
+        } catch (Exception e) {
+            // If method doesn't exist or can't be invoked, log warning and return null
+            log.warn("Could not validate unique field {} with value {}: {}", fieldName, value, e.getMessage());
+        }
+        return null;
+    }
+    
+    /**
+     * Custom entity validation
+     * @param entity Entity to validate
+     * @return Error message if validation fails, null otherwise
+     */
+    protected String validateEntity(T entity) {
+        // This method should be overridden by subclasses to implement custom validation
+        return null;
+    }
 } 

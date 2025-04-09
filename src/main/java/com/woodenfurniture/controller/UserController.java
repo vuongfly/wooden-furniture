@@ -4,10 +4,10 @@ import com.woodenfurniture.dto.request.UserCreateRequest;
 import com.woodenfurniture.dto.request.UserUpdateRequest;
 import com.woodenfurniture.dto.response.ApiResponse;
 import com.woodenfurniture.dto.response.UserResponse;
+import com.woodenfurniture.entity.User;
 import com.woodenfurniture.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PostAuthorize;
@@ -23,12 +23,16 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/users")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
-public class UserController {
+public class UserController extends BaseController<User, Long, UserResponse> {
     UserService userService;
+    
+    public UserController(UserService userService) {
+        super(userService, "User");
+        this.userService = userService;
+    }
 
     @PostMapping
     ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreateRequest request){

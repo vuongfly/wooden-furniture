@@ -1,0 +1,66 @@
+{
+  "name": "Users",
+  "rowIndex": 1,
+  "columnIndex": 0,
+  "column": [
+    {
+      "headerExcel": "Username",
+      "field": "username",
+      "required": true,
+      "unique": true,
+      "type": "STRING",
+      "regex": "^[a-zA-Z0-9_]{3,20}$",
+      "regexErrorMessage": "Username must be 3-20 characters long and contain only letters, numbers, and underscores."
+    },
+    {
+      "headerExcel": "Password",
+      "field": "password",
+      "required": true,
+      "type": "STRING",
+      "regex": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
+      "regexErrorMessage": "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character."
+    },
+    {
+      "headerExcel": "Email",
+      "field": "email",
+      "required": true,
+      "unique": true,
+      "type": "EMAIL"
+    },
+    {
+      "headerExcel": "First Name",
+      "field": "firstName",
+      "required": true,
+      "type": "STRING",
+      "regex": "^[a-zA-Z\\s-']{2,50}$",
+      "regexErrorMessage": "First name must be 2-50 characters long and contain only letters, spaces, hyphens, and apostrophes."
+    },
+    {
+      "headerExcel": "Last Name",
+      "field": "lastName",
+      "required": true,
+      "type": "STRING",
+      "regex": "^[a-zA-Z\\s-']{2,50}$",
+      "regexErrorMessage": "Last name must be 2-50 characters long and contain only letters, spaces, hyphens, and apostrophes."
+    },
+    {
+      "headerExcel": "Phone Number",
+      "field": "phone",
+      "type": "PHONE"
+    },
+    {
+      "headerExcel": "Address",
+      "field": "address",
+      "type": "STRING",
+      "regex": "^[a-zA-Z0-9\\s,.-]{5,100}$",
+      "regexErrorMessage": "Address must be 5-100 characters long and contain only letters, numbers, spaces, commas, periods, and hyphens."
+    },
+    {
+      "headerExcel": "Roles",
+      "field": "roles",
+      "required": true,
+      "multiple": true,
+      "type": "STRING"
+    }
+  ]
+} 

@@ -1,0 +1,49 @@
+{
+  "sheetName": "Users",
+  "headerRow": 1,
+  "columns": [
+    {
+      "field": "id",
+      "header": "ID"
+    },
+    {
+      "field": "username",
+      "header": "Username"
+    },
+    {
+      "field": "email",
+      "header": "Email"
+    },
+    {
+      "field": "firstName",
+      "header": "First Name"
+    },
+    {
+      "field": "lastName",
+      "header": "Last Name"
+    },
+    {
+      "field": "phone",
+      "header": "Phone Number"
+    },
+    {
+      "field": "address",
+      "header": "Address"
+    },
+    {
+      "field": "roles",
+      "header": "Roles",
+      "multiple": true
+    },
+    {
+      "field": "createdAt",
+      "header": "Created At",
+      "format": "dd/MM/yyyy HH:mm:ss"
+    },
+    {
+      "field": "updatedAt",
+      "header": "Updated At",
+      "format": "dd/MM/yyyy HH:mm:ss"
+    }
+  ]
+} 

@@ -54,5 +54,52 @@ public class SimpleExcelConfig {
          * Field name in the entity
          */
         private String field;
+        
+        /**
+         * Whether the field is required
+         */
+        private boolean required;
+        
+        /**
+         * Whether the field must be unique
+         */
+        private boolean unique;
+        
+        /**
+         * Whether the field can have multiple values
+         */
+        private boolean multiple;
+        
+        /**
+         * Data type of the field
+         */
+        private FieldType type;
+        
+        /**
+         * Format for date/time fields
+         */
+        private String format;
+        
+        /**
+         * Regular expression for pattern validation
+         */
+        private String regex;
+        
+        /**
+         * Custom error message for regex validation failure
+         */
+        private String regexErrorMessage;
+    }
+    
+    /**
+     * Enum representing field types
+     */
+    public enum FieldType {
+        STRING,
+        NUMBER,
+        DATE,
+        BOOLEAN,
+        EMAIL,
+        PHONE
     }
 } 
