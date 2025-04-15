@@ -39,11 +39,4 @@ public interface BaseRepository<T extends BaseEntity, ID> extends JpaRepository<
      * @return Page of entities
      */
     Page<T> findByIsDeletedFalse(Pageable pageable);
-    
-    /**
-     * Soft delete entity by UUID
-     * @param uuid UUID of the entity
-     * @return Number of entities updated
-     */
-    int softDeleteByUuid(String uuid);
 } 
