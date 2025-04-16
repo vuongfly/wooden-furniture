@@ -1,4 +1,4 @@
-package com.woodenfurniture.authentication.dto;
+package com.woodenfurniture.authentication;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

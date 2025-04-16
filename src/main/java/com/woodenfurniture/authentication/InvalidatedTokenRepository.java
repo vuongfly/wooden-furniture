@@ -1,6 +1,5 @@
-package com.woodenfurniture.authentication.repository;
+package com.woodenfurniture.authentication;
 
-import com.woodenfurniture.authentication.dto.InvalidatedToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

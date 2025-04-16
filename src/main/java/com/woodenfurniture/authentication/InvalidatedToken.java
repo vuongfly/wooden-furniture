@@ -1,4 +1,4 @@
-package com.woodenfurniture.authentication.dto;
+package com.woodenfurniture.authentication;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
