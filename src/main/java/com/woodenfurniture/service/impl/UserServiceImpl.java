@@ -52,22 +52,32 @@ public class UserServiceImpl extends BaseServiceImpl<User, Long> implements User
         this.passwordEncoder = passwordEncoder;
     }
 
-    @Transactional
-    public UserResponse create(UserCreateRequest request) {
-        if (userRepository.existsByUsername(request.getUsername()))
-            throw new AppException(ErrorCode.USER_EXISTED);
-
-        User user = userMapper.toEntity(request);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        var roles = roleRepository.findAllById(request.getRoles());
-        user.setRoles(new HashSet<>(roles));
-
-        return userMapper.toResponse(userRepository.save(user));
-    }
-
     @Override
+    @Transactional
     public Object create(Object request) {
-        return super.create(request);
+        if (request == null) {
+            throw new AppException(ErrorCode.INVALID_KEY);
+        }
+
+        if (request instanceof UserCreateRequest) {
+            UserCreateRequest userRequest = (UserCreateRequest) request;
+            if (userRepository.existsByUsername(userRequest.getUsername()))
+                throw new AppException(ErrorCode.USER_EXISTED);
+
+            User user = userMapper.toEntity(userRequest);
+            user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+            var roles = roleRepository.findAllById(userRequest.getRoles());
+            user.setRoles(new HashSet<>(roles));
+
+            return userMapper.toResponse(userRepository.save(user));
+        }
+
+        try {
+            return super.create(request);
+        } catch (Exception e) {
+            log.error("Error processing create request: {}", e.getMessage());
+            throw new AppException(ErrorCode.INVALID_KEY);
+        }
     }
 
     @Override
@@ -83,18 +93,33 @@ public class UserServiceImpl extends BaseServiceImpl<User, Long> implements User
         return userMapper.toResponse(user);
     }
 
+    @Override
     @Transactional
-    public UserResponse update(String userId, UserUpdateRequest request) {
-        User user = userRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED));
+    public Object update(Long id, Object request) {
+        if (request == null) {
+            throw new AppException(ErrorCode.INVALID_KEY);
+        }
 
-        userMapper.updateUser(user, request);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        if (request instanceof UserUpdateRequest) {
+            UserUpdateRequest userRequest = (UserUpdateRequest) request;
+            User user = userRepository.findById(id)
+                    .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED));
 
-        var roles = roleRepository.findAllById(request.getRoles());
-        user.setRoles(new HashSet<>(roles));
+            userMapper.updateUser(user, userRequest);
+            user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
 
-        return userMapper.toResponse(userRepository.save(user));
+            var roles = roleRepository.findAllById(userRequest.getRoles());
+            user.setRoles(new HashSet<>(roles));
+
+            return userMapper.toResponse(userRepository.save(user));
+        }
+
+        try {
+            return super.update(id, request);
+        } catch (Exception e) {
+            log.error("Error processing update request: {}", e.getMessage());
+            throw new AppException(ErrorCode.INVALID_KEY);
+        }
     }
 
     @Override

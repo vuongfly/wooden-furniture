@@ -21,6 +21,7 @@ public enum ErrorCode {
     ROLE_NOT_EXISTED(1012, "Role is not existed", HttpStatus.BAD_REQUEST),
     INVALID_TOKEN(1013, "Invalid token", HttpStatus.BAD_REQUEST),
     TOKEN_DISABLED(1014, "This token has been disabled", HttpStatus.BAD_REQUEST),
+    INVALID_REQUEST(1015, "Invalid request", HttpStatus.BAD_REQUEST),
     // Add more error codes above
     ;
 
