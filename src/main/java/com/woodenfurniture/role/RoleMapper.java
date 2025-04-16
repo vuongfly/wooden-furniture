@@ -8,12 +8,22 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
+import org.mapstruct.factory.Mappers;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface RoleMapper extends BaseMapper<Role, RoleResponse> {
+
+    RoleMapper INSTANCE = Mappers.getMapper(RoleMapper.class);
+
+    @Override
+    @Mapping(target = "name", source = "name")
+    @Mapping(target = "description", source = "description")
+    @Mapping(target = "permissions", source = "permissions", qualifiedByName = "toPermissionResponses")
+    RoleResponse toDto(Role role);
+
     @Override
     default Role toEntity(Object request) {
         if (!(request instanceof RoleRequest)) {
@@ -22,14 +32,10 @@ public interface RoleMapper extends BaseMapper<Role, RoleResponse> {
         return toRoleEntity((RoleRequest) request);
     }
 
-    @Mapping(target = "permissions", source = "permissionNames", qualifiedByName = "toPermissions")
-    Role toRoleEntity(RoleRequest request);
-
-    @Override
     @Mapping(target = "name", source = "name")
     @Mapping(target = "description", source = "description")
-    @Mapping(target = "permissions", source = "permissions", qualifiedByName = "toPermissionResponses")
-    RoleResponse toDto(Role role);
+    @Mapping(target = "permissions", source = "permissionNames", qualifiedByName = "toPermissions")
+    Role toRoleEntity(RoleRequest request);
 
     @Override
     default void updateEntityFromDto(Object request, @MappingTarget Role entity) {
@@ -39,6 +45,8 @@ public interface RoleMapper extends BaseMapper<Role, RoleResponse> {
         updateRoleEntityFromDto((RoleRequest) request, entity);
     }
 
+    @Mapping(target = "name", source = "name")
+    @Mapping(target = "description", source = "description")
     @Mapping(target = "permissions", source = "permissionNames", qualifiedByName = "toPermissions")
     void updateRoleEntityFromDto(RoleRequest request, @MappingTarget Role entity);
 

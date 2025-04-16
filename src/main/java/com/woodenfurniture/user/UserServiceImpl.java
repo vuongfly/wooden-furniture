@@ -62,6 +62,11 @@ public class UserServiceImpl extends BaseServiceImpl<User, Long, UserRequest, Us
     }
 
     @Override
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    @Override
     public UserResponse create(UserRequest request) {
         // Check if username or email already exists
         if (userRepository.existsByUsername(request.getUsername())) {
