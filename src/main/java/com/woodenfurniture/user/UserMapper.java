@@ -1,11 +1,10 @@
 package com.woodenfurniture.user;
 
 import com.woodenfurniture.base.BaseMapper;
-import com.woodenfurniture.role.RoleMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
-@Mapper(componentModel = "spring", uses = {RoleMapper.class})
+@Mapper(componentModel = "spring")
 public interface UserMapper extends BaseMapper<User, UserResponse> {
 
     UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);

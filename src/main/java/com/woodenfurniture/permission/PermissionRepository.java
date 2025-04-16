@@ -1,9 +1,9 @@
 package com.woodenfurniture.permission;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.woodenfurniture.base.BaseRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PermissionRepository extends JpaRepository<Permission, String> {
+public interface PermissionRepository extends BaseRepository<Permission, Long> {
     boolean existsByName(String name);
-}
+} 

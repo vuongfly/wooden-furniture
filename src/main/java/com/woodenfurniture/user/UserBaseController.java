@@ -1,11 +1,11 @@
 package com.woodenfurniture.user;
 
-import com.woodenfurniture.base.BaseControllerImpl;
+import com.woodenfurniture.base.BaseController;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public abstract class UserBaseController extends BaseControllerImpl<User, Long, UserRequest, UserResponse> {
+public abstract class UserBaseController extends BaseController<User, Long, UserRequest, UserResponse> {
 
     protected final UserService userService;
 

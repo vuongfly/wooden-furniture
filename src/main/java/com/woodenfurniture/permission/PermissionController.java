@@ -1,51 +1,6 @@
 package com.woodenfurniture.permission;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.woodenfurniture.base.ApiResponse;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.woodenfurniture.base.Controller;
 
-import javax.validation.Valid;
-import java.util.List;
-
-@RestController
-@RequiredArgsConstructor
-@RequestMapping("/permissions")
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@Slf4j
-public class PermissionController {
-
-    PermissionService service;
-
-    @PostMapping
-    public ApiResponse<PermissionResponse> createPermission(@RequestBody @Valid PermissionRequest request) {
-        log.info("Controller: create Permission");
-        return ApiResponse.<PermissionResponse>builder()
-                .result(service.create(request))
-                .build();
-    }
-
-    @GetMapping
-    public ApiResponse<List<PermissionResponse>> getAllPermissions() throws JsonProcessingException {
-        return ApiResponse.<List<PermissionResponse>>builder()
-                .result(service.getAllPermissions())
-                .build();
-    }
-
-    @DeleteMapping("/{permissionId}")
-    public ApiResponse<Void> deletePermission(@PathVariable String permissionId) {
-        service.deletePermission(permissionId);
-        return ApiResponse.<Void>builder()
-                .build();
-    }
-
-}
+public interface PermissionController extends Controller<Permission, Long, PermissionRequest, PermissionResponse> {
+} 

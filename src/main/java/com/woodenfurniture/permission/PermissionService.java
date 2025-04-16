@@ -1,43 +1,13 @@
 package com.woodenfurniture.permission;
 
-import com.woodenfurniture.exception.AppException;
-import com.woodenfurniture.exception.ErrorCode;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
+import com.woodenfurniture.base.BaseService;
 
-import java.util.List;
-
-@Service
-@RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@Slf4j
-public class PermissionService {
-    PermissionRepository repo;
-    PermissionMapper mapper;
-    PasswordEncoder passwordEncoder;
-
-    public PermissionResponse create(PermissionRequest request) {
-        if (repo.existsByName(request.getName()))
-            throw new AppException(ErrorCode.PERMISSION_EXISTED);
-
-        Permission permission = mapper.toEntity(request);
-        permission = repo.save(permission);
-        return mapper.toResponse(permission);
-    }
-
-    public List<PermissionResponse> getAllPermissions() {
-        return repo.findAll().stream()
-                .map(mapper::toResponse).toList();
-    }
-
-    public void deletePermission(String permissionId) {
-        var permission = repo.findById(permissionId)
-                .orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_EXISTED));
-        repo.delete(permission);
-    }
-
-}
+public interface PermissionService extends BaseService<Permission, Long, PermissionRequest, PermissionResponse> {
+    /**
+     * Check if a permission exists by name
+     *
+     * @param name Permission name
+     * @return true if permission exists, false otherwise
+     */
+    boolean existsByName(String name);
+} 

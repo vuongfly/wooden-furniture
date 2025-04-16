@@ -1,9 +1,9 @@
 package com.woodenfurniture.permission;
 
-import jakarta.persistence.Id;
+import com.woodenfurniture.base.BaseRequest;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -11,10 +11,11 @@ import lombok.experimental.FieldDefaults;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PermissionRequest {
-    @Id
+public class PermissionRequest extends BaseRequest<Permission> {
+    @NotBlank(message = "Permission name is required")
     String name;
+    
     String description;
-}
+
+} 

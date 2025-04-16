@@ -7,7 +7,6 @@ import com.woodenfurniture.config.excel.SimpleExcelConfigReader;
 import com.woodenfurniture.exception.AppException;
 import com.woodenfurniture.exception.ErrorCode;
 import com.woodenfurniture.exception.UserNotFoundException;
-import com.woodenfurniture.role.RoleRepository;
 import lombok.AccessLevel;
 import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;

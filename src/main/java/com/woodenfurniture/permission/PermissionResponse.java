@@ -1,5 +1,6 @@
 package com.woodenfurniture.permission;
 
+import com.woodenfurniture.base.BaseResponse;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PermissionResponse {
+public class PermissionResponse extends BaseResponse<Permission> {
     String name;
     String description;
-}
+} 

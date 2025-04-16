@@ -1,20 +1,17 @@
 package com.woodenfurniture.permission;
 
-import com.woodenfurniture.user.User;
-import com.woodenfurniture.user.UserRequest;
+import com.woodenfurniture.base.BaseMapper;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
-public interface PermissionMapper {
-    Permission toEntity(PermissionRequest request);
-
+public interface PermissionMapper extends BaseMapper<Permission, PermissionResponse> {
+    @Override
     PermissionResponse toDto(Permission entity);
 
-    //    @Mapping(target = "password", ignore = true)
-    PermissionResponse toResponse(Permission entity);
+    @Override
+    Permission toEntity(Object request);
 
-    @Mapping(target = "roles", ignore = true)
-    void updateUser(@MappingTarget User user, UserRequest request);
-}
+    @Override
+    void updateEntityFromDto(Object request, @MappingTarget Permission entity);
+} 

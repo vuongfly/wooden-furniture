@@ -1,14 +1,14 @@
 package com.woodenfurniture.user;
 
 import com.woodenfurniture.base.ApiResponse;
-import com.woodenfurniture.base.BaseControllerImpl;
+import com.woodenfurniture.base.BaseController;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class UserControllerImpl extends BaseControllerImpl<User, Long, UserRequest, UserResponse> implements UserController {
+public class UserControllerImpl extends BaseController<User, Long, UserRequest, UserResponse> implements UserController {
 
     public UserControllerImpl(UserService service) {
         super(service, "User");
