@@ -1,9 +1,12 @@
 package com.woodenfurniture.user;
 
+import com.woodenfurniture.base.BaseRequest;
 import com.woodenfurniture.enums.Gender;
 import com.woodenfurniture.validation.annotation.DobConstraint;
-import com.woodenfurniture.validation.annotation.EmailFormat;
 import com.woodenfurniture.validation.annotation.PhoneFormat;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +15,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.NumberFormat;
 
-import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -21,18 +23,25 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserCreateRequest {
-    String name;
+public class UserCreateRequest extends BaseRequest<User> {
+    @NotBlank(message = "Username is required")
+    @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+    private String username;
+    
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
+    private String email;
+    
+    @NotBlank(message = "Password is required")
+    @Size(min = 6, message = "Password must be at least 6 characters")
+    private String password;
+    
+    @NotBlank(message = "Full name is required")
+    private String fullName;
+    
     Gender gender;
     @NumberFormat
     Integer age;
-    @Size(min = 3, message = "USERNAME_INVALID")
-    String username;
-    @Size(min = 8, message = "INVALID_PASSWORD")
-    String password;
-    @EmailFormat
-    @Size(max = 50)
-    String email;
     @PhoneFormat
     @Size(max = 50)
     String phoneNumber;

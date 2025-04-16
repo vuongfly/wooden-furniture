@@ -11,15 +11,17 @@ import java.util.List;
  * Base service interface for common CRUD operations
  * @param <T> Entity type
  * @param <ID> ID type
+ * @param <R> Request type
+ * @param <S> Response type
  */
-public interface BaseService<T extends BaseEntity, ID> {
+public interface BaseService<T extends BaseEntity, ID, R extends BaseRequest<T>, S extends BaseResponse<T>> {
     
     /**
      * Create a new entity
      * @param request Request object with data to create the entity
      * @return Created entity response
      */
-    Object create(Object request);
+    S create(R request);
     
     /**
      * Update an existing entity
@@ -27,34 +29,34 @@ public interface BaseService<T extends BaseEntity, ID> {
      * @param request Request object with data to update the entity
      * @return Updated entity response
      */
-    Object update(ID id, Object request);
+    S update(ID id, R request);
     
     /**
      * Get entity by ID
      * @param id Entity ID
      * @return Entity response
      */
-    Object getById(ID id);
+    S getById(ID id);
     
     /**
      * Get entity by UUID
      * @param uuid Entity UUID
      * @return Entity response
      */
-    Object getByUuid(String uuid);
+    S getByUuid(String uuid);
     
     /**
      * Get all entities
      * @return List of entity responses
      */
-    List<?> getAll();
+    List<S> getAll();
     
     /**
      * Get all entities with pagination
      * @param pageable Pageable object
      * @return Page of entity responses
      */
-    Page<?> getAll(Pageable pageable);
+    Page<S> getAll(Pageable pageable);
     
     /**
      * Delete entity by ID (soft delete)
@@ -74,7 +76,7 @@ public interface BaseService<T extends BaseEntity, ID> {
      * @param pageable Pageable object for pagination and sorting
      * @return Page of responses
      */
-    Page<?> search(BaseSearchRequest searchRequest, Pageable pageable);
+    Page<S> search(BaseSearchRequest searchRequest, Pageable pageable);
     
     /**
      * Import data from Excel file

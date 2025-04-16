@@ -1,22 +1,11 @@
 package com.woodenfurniture.user;
 
 import com.woodenfurniture.base.BaseService;
-import org.springframework.security.access.prepost.PreAuthorize;
 
-import java.util.List;
-
-public interface UserService extends BaseService<User, Long> {
-    
-//    @Transactional
-//    UserResponse create(UserCreateRequest request);
-
-//    UserResponse getById(String userId);
-
+public interface UserService extends BaseService<User, Long, UserCreateRequest, UserResponse> {
+    /**
+     * Get the current user's information
+     * @return User information
+     */
     UserResponse getMyInfo();
-
-//    @Transactional
-//    UserResponse update(String userId, UserUpdateRequest request);
-
-    @PreAuthorize("hasAuthority('READ_USER')")
-    List<UserResponse> getUsers();
 }

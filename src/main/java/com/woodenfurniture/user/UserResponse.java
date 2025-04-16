@@ -1,30 +1,18 @@
 package com.woodenfurniture.user;
 
-import com.woodenfurniture.base.BaseDTO;
-import com.woodenfurniture.role.RoleResponse;
-import com.woodenfurniture.enums.Gender;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.FieldDefaults;
+import com.woodenfurniture.base.BaseResponse;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.time.LocalDate;
-import java.util.Set;
+@Getter
+@Setter
+public class UserResponse extends BaseResponse<User> {
+    
+    private Long id;
+    private String uuid;
+    private String username;
+    private String email;
+    private String fullName;
+    private boolean isDeleted;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserResponse extends BaseDTO {
-    String name;
-    Gender gender;
-    Integer age;
-    String username;
-    String email;
-    String phoneNumber;
-    Set<RoleResponse> roles;
-    LocalDate dob;
 }

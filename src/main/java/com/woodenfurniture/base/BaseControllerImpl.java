@@ -19,17 +19,18 @@ import java.io.ByteArrayOutputStream;
 import java.util.List;
 
 @RequiredArgsConstructor
-public abstract class BaseControllerImpl<T extends BaseEntity, ID> implements BaseController<T, ID> {
+public abstract class BaseControllerImpl<T extends BaseEntity, ID, Req extends BaseRequest<T>, Res extends BaseResponse<T>> 
+        implements BaseController<T, ID, Req, Res> {
 
     @Getter
-    protected final BaseService<T, ID> service;
+    protected final BaseService<T, ID, Req, Res> service;
     protected final String entityName;
 
     @Override
-    public ResponseEntity<ApiResponse<?>> create(@RequestBody Object request) {
-        Object response = service.create(request);
+    public ResponseEntity<ApiResponse<Res>> create(@RequestBody Req request) {
+        Res response = service.create(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.builder()
+                .body(ApiResponse.<Res>builder()
                         .code(HttpStatus.CREATED.value())
                         .message(entityName + " created successfully")
                         .result(response)
@@ -37,9 +38,9 @@ public abstract class BaseControllerImpl<T extends BaseEntity, ID> implements Ba
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> update(@PathVariable ID id, @RequestBody Object request) {
-        Object response = service.update(id, request);
-        return ResponseEntity.ok(ApiResponse.builder()
+    public ResponseEntity<ApiResponse<Res>> update(@PathVariable ID id, @RequestBody Req request) {
+        Res response = service.update(id, request);
+        return ResponseEntity.ok(ApiResponse.<Res>builder()
                 .code(HttpStatus.OK.value())
                 .message(entityName + " updated successfully")
                 .result(response)
@@ -47,9 +48,9 @@ public abstract class BaseControllerImpl<T extends BaseEntity, ID> implements Ba
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> getById(@PathVariable ID id) {
-        Object response = service.getById(id);
-        return ResponseEntity.ok(ApiResponse.builder()
+    public ResponseEntity<ApiResponse<Res>> getById(@PathVariable ID id) {
+        Res response = service.getById(id);
+        return ResponseEntity.ok(ApiResponse.<Res>builder()
                 .code(HttpStatus.OK.value())
                 .message(entityName + " retrieved successfully")
                 .result(response)
@@ -57,9 +58,9 @@ public abstract class BaseControllerImpl<T extends BaseEntity, ID> implements Ba
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> getByUuid(@PathVariable String uuid) {
-        Object response = service.getByUuid(uuid);
-        return ResponseEntity.ok(ApiResponse.builder()
+    public ResponseEntity<ApiResponse<Res>> getByUuid(@PathVariable String uuid) {
+        Res response = service.getByUuid(uuid);
+        return ResponseEntity.ok(ApiResponse.<Res>builder()
                 .code(HttpStatus.OK.value())
                 .message(entityName + " retrieved successfully")
                 .result(response)
@@ -67,9 +68,9 @@ public abstract class BaseControllerImpl<T extends BaseEntity, ID> implements Ba
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> getAll() {
-        List<?> responses = service.getAll();
-        return ResponseEntity.ok(ApiResponse.builder()
+    public ResponseEntity<ApiResponse<List<Res>>> getAll() {
+        List<Res> responses = service.getAll();
+        return ResponseEntity.ok(ApiResponse.<List<Res>>builder()
                 .code(HttpStatus.OK.value())
                 .message(entityName + "s retrieved successfully")
                 .result(responses)
@@ -77,9 +78,9 @@ public abstract class BaseControllerImpl<T extends BaseEntity, ID> implements Ba
     }
 
     @Override
-    public ResponseEntity<ApiResponse<Page<?>>> getAll(Pageable pageable) {
-        Page<?> responses = service.getAll(pageable);
-        return ResponseEntity.ok(ApiResponse.<Page<?>>builder()
+    public ResponseEntity<ApiResponse<Page<Res>>> getAll(Pageable pageable) {
+        Page<Res> responses = service.getAll(pageable);
+        return ResponseEntity.ok(ApiResponse.<Page<Res>>builder()
                 .code(HttpStatus.OK.value())
                 .message(entityName + "s retrieved successfully")
                 .result(responses)
@@ -105,11 +106,11 @@ public abstract class BaseControllerImpl<T extends BaseEntity, ID> implements Ba
     }
 
     @Override
-    public ResponseEntity<ApiResponse<Page<?>>> search(
+    public ResponseEntity<ApiResponse<Page<Res>>> search(
             @RequestParam(required = false) BaseSearchRequest searchRequest,
             Pageable pageable) {
-        Page<?> responses = service.search(searchRequest, pageable);
-        return ResponseEntity.ok(ApiResponse.<Page<?>>builder()
+        Page<Res> responses = service.search(searchRequest, pageable);
+        return ResponseEntity.ok(ApiResponse.<Page<Res>>builder()
                 .code(HttpStatus.OK.value())
                 .message(entityName + "s retrieved successfully")
                 .result(responses)

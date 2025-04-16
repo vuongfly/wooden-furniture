@@ -26,17 +26,18 @@ import static org.springframework.security.util.FieldUtils.getFieldValue;
 
 @Slf4j
 @RequiredArgsConstructor
-public abstract class BaseServiceImpl<T extends BaseEntity, ID> implements BaseService<T, ID> {
+public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends BaseRequest<T>, Res extends BaseResponse<T>> 
+        implements BaseService<T, ID, Req, Res> {
 
     protected final BaseRepository<T, ID> repository;
     protected final Class<T> entityClass;
     protected final ExcelService excelService;
-    protected final BaseMapper<T, ?> mapper;
+    protected final BaseMapper<T, Res> mapper;
     protected final SimpleExcelConfigReader excelConfigReader;
 
     @Override
     @Transactional
-    public Object create(Object request) {
+    public Res create(Req request) {
         T entity = mapper.toEntity(request);
         entity = repository.save(entity);
         return mapper.toDto(entity);
@@ -44,7 +45,7 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID> implements BaseS
 
     @Override
     @Transactional
-    public Object update(ID id, Object request) {
+    public Res update(ID id, Req request) {
         T entity = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(entityClass.getSimpleName() + "id: " + id));
         
@@ -54,27 +55,27 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID> implements BaseS
     }
 
     @Override
-    public Object getById(ID id) {
+    public Res getById(ID id) {
         T entity = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(entityClass.getSimpleName() + "id: " + id));
         return mapper.toDto(entity);
     }
 
     @Override
-    public Object getByUuid(String uuid) {
+    public Res getByUuid(String uuid) {
         T entity = repository.findByUuid(uuid)
                 .orElseThrow(() -> new ResourceNotFoundException(entityClass.getSimpleName() + "uuid" + uuid));
         return mapper.toDto(entity);
     }
 
     @Override
-    public List<?> getAll() {
+    public List<Res> getAll() {
         List<T> entities = repository.findByIsDeletedFalse();
         return mapper.toDtoList(entities);
     }
 
     @Override
-    public Page<?> getAll(Pageable pageable) {
+    public Page<Res> getAll(Pageable pageable) {
         Page<T> entities = repository.findByIsDeletedFalse(pageable);
         return entities.map(mapper::toDto);
     }
@@ -98,7 +99,7 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID> implements BaseS
     }
 
     @Override
-    public Page<?> search(BaseSearchRequest searchRequest, Pageable pageable) {
+    public Page<Res> search(BaseSearchRequest searchRequest, Pageable pageable) {
         Specification<T> spec = createSearchSpecification(searchRequest);
         Page<T> entities = repository.findAll(spec, pageable);
         return entities.map(mapper::toDto);

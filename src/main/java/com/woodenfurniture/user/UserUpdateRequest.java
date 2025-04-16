@@ -1,5 +1,6 @@
 package com.woodenfurniture.user;
 
+import com.woodenfurniture.base.BaseRequest;
 import com.woodenfurniture.enums.Gender;
 import com.woodenfurniture.validation.annotation.DobConstraint;
 import com.woodenfurniture.validation.annotation.EmailFormat;
@@ -21,22 +22,27 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserUpdateRequest {
-    String name;
-    Gender gender;
-    @NumberFormat
-    Integer age;
-    @Size(min = 3, message = "USERNAME_INVALID")
-//    String username;
-//    @Size(min = 8, message = "INVALID_PASSWORD")
-    String password;
+public class UserUpdateRequest extends BaseRequest<User> {
+    @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+    private String username;
+    
     @EmailFormat
     @Size(max = 50)
-    String email;
+    private String email;
+    
+    @Size(min = 6, message = "Password must be at least 6 characters")
+    private String password;
+    
+    private String fullName;
+    
+    @NumberFormat
+    Integer age;
+    Gender gender;
     @PhoneFormat
     @Size(max = 50)
     String phoneNumber;
     List<String> roles;
     @DobConstraint(message = "INVALID_DOB", min = 18)
     LocalDate dob;
+
 }
