@@ -1,4 +1,4 @@
-package com.woodenfurniture.service;
+package com.woodenfurniture.base;
 
 import com.woodenfurniture.config.excel.SimpleExcelConfig;
 import org.springframework.web.multipart.MultipartFile;
