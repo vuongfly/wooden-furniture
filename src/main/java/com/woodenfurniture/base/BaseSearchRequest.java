@@ -1,4 +1,4 @@
-package com.woodenfurniture.dto.request;
+package com.woodenfurniture.base;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;

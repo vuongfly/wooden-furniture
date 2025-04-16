@@ -1,5 +1,6 @@
 package com.woodenfurniture.controller;
 
+import com.woodenfurniture.base.BaseController;
 import com.woodenfurniture.dto.response.ApiResponse;
 import com.woodenfurniture.dto.response.UserResponse;
 import com.woodenfurniture.entity.User;

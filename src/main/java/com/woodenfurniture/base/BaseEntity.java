@@ -1,4 +1,4 @@
-package com.woodenfurniture.common;
+package com.woodenfurniture.base;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;

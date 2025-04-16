@@ -1,4 +1,4 @@
-package com.woodenfurniture.dto;
+package com.woodenfurniture.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

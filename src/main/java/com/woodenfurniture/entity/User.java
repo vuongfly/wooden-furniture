@@ -1,6 +1,6 @@
 package com.woodenfurniture.entity;
 
-import com.woodenfurniture.common.BaseEntity;
+import com.woodenfurniture.base.BaseEntity;
 import com.woodenfurniture.enums.Gender;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

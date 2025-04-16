@@ -1,5 +1,7 @@
-package com.woodenfurniture.controller;
+package com.woodenfurniture.controller.impl;
 
+import com.woodenfurniture.controller.UserBaseController;
+import com.woodenfurniture.controller.UserController;
 import com.woodenfurniture.dto.response.ApiResponse;
 import com.woodenfurniture.dto.response.UserResponse;
 import com.woodenfurniture.service.UserService;

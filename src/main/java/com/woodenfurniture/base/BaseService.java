@@ -1,7 +1,5 @@
-package com.woodenfurniture.service;
+package com.woodenfurniture.base;
 
-import com.woodenfurniture.common.BaseEntity;
-import com.woodenfurniture.dto.request.BaseSearchRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;

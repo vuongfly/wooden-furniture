@@ -1,6 +1,5 @@
-package com.woodenfurniture.mapper;
+package com.woodenfurniture.base;
 
-import com.woodenfurniture.common.BaseEntity;
 import org.mapstruct.MappingTarget;
 
 import java.util.List;

@@ -1,5 +1,6 @@
 package com.woodenfurniture.service.impl;
 
+import com.woodenfurniture.base.BaseServiceImpl;
 import com.woodenfurniture.config.excel.SimpleExcelConfig;
 import com.woodenfurniture.config.excel.SimpleExcelConfigReader;
 import com.woodenfurniture.dto.mapper.UserMapper;

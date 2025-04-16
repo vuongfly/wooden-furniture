@@ -1,13 +1,8 @@
-package com.woodenfurniture.service.impl;
+package com.woodenfurniture.base;
 
-import com.woodenfurniture.common.BaseEntity;
 import com.woodenfurniture.config.excel.SimpleExcelConfig;
 import com.woodenfurniture.config.excel.SimpleExcelConfigReader;
-import com.woodenfurniture.dto.request.BaseSearchRequest;
 import com.woodenfurniture.exception.ResourceNotFoundException;
-import com.woodenfurniture.mapper.BaseMapper;
-import com.woodenfurniture.repository.BaseRepository;
-import com.woodenfurniture.service.BaseService;
 import com.woodenfurniture.service.ExcelService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;

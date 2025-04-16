@@ -1,6 +1,6 @@
 package com.woodenfurniture.controller;
 
-import com.woodenfurniture.dto.ChartRequest;
+import com.woodenfurniture.dto.request.ChartRequest;
 import com.woodenfurniture.dto.request.ChartSearchRequest;
 import com.woodenfurniture.dto.response.ApiResponse;
 import com.woodenfurniture.dto.response.ChartResponse;

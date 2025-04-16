@@ -1,12 +1,12 @@
 package com.woodenfurniture.service;
 
-import com.woodenfurniture.dto.ChartRequest;
+import com.woodenfurniture.dto.request.ChartRequest;
 import com.woodenfurniture.dto.request.ChartSearchRequest;
 import com.woodenfurniture.dto.response.ApiResponse;
 import com.woodenfurniture.dto.response.ChartResponse;
 import com.woodenfurniture.entity.Chart;
 import com.woodenfurniture.exception.ResourceNotFoundException;
-import com.woodenfurniture.mapper.ChartMapper;
+import com.woodenfurniture.dto.mapper.ChartMapper;
 import com.woodenfurniture.repository.ChartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

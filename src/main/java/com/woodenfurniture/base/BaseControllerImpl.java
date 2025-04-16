@@ -1,9 +1,6 @@
-package com.woodenfurniture.controller;
+package com.woodenfurniture.base;
 
-import com.woodenfurniture.common.BaseEntity;
-import com.woodenfurniture.dto.request.BaseSearchRequest;
 import com.woodenfurniture.dto.response.ApiResponse;
-import com.woodenfurniture.service.BaseService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;

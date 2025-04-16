@@ -1,7 +1,5 @@
-package com.woodenfurniture.controller;
+package com.woodenfurniture.base;
 
-import com.woodenfurniture.common.BaseEntity;
-import com.woodenfurniture.dto.request.BaseSearchRequest;
 import com.woodenfurniture.dto.response.ApiResponse;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;

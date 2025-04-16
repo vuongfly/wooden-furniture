@@ -1,6 +1,5 @@
-package com.woodenfurniture.repository;
+package com.woodenfurniture.base;
 
-import com.woodenfurniture.common.BaseEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

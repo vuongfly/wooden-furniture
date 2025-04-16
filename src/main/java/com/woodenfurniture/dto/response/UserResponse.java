@@ -1,6 +1,6 @@
 package com.woodenfurniture.dto.response;
 
-import com.woodenfurniture.dto.BaseDTO;
+import com.woodenfurniture.base.BaseDTO;
 import com.woodenfurniture.enums.Gender;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
