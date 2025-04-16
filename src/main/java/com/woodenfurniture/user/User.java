@@ -32,7 +32,7 @@ public class User extends BaseEntity implements UserDetails {
     String name;
     @Enumerated(EnumType.STRING)
     Gender gender;
-//    Address address;
+    //    Address address;
     Integer age;
     String username;
     String password;

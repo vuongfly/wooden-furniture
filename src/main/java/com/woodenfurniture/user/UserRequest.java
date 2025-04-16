@@ -22,19 +22,19 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserUpdateRequest extends BaseRequest<User> {
+public class UserRequest extends BaseRequest<User> {
     @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
     private String username;
-    
+
     @EmailFormat
     @Size(max = 50)
     private String email;
-    
+
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
-    
+
     private String fullName;
-    
+
     @NumberFormat
     Integer age;
     Gender gender;
@@ -44,5 +44,4 @@ public class UserUpdateRequest extends BaseRequest<User> {
     List<String> roles;
     @DobConstraint(message = "INVALID_DOB", min = 18)
     LocalDate dob;
-
 }

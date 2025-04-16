@@ -26,7 +26,7 @@ import static org.springframework.security.util.FieldUtils.getFieldValue;
 
 @Slf4j
 @RequiredArgsConstructor
-public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends BaseRequest<T>, Res extends BaseResponse<T>> 
+public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends BaseRequest<T>, Res extends BaseResponse<T>>
         implements BaseService<T, ID, Req, Res> {
 
     protected final BaseRepository<T, ID> repository;
@@ -48,7 +48,7 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
     public Res update(ID id, Req request) {
         T entity = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(entityClass.getSimpleName() + "id: " + id));
-        
+
         mapper.updateEntityFromDto(request, entity);
         entity = repository.save(entity);
         return mapper.toDto(entity);
@@ -111,23 +111,23 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
         try {
             // Get the configuration file path for this entity
             String configPath = getImportConfigPath();
-            
+
             // Read the configuration
             SimpleExcelConfig config = excelConfigReader.readConfig(configPath);
-            
+
             // Import data from Excel using the configuration
             List<T> entities = excelService.importFromExcelWithConfigFile(file, configPath, entityClass);
-            
+
             // Validate the imported entities
             Map<T, String> validationResults = validateEntities(entities, config);
-            
+
             // Save valid entities to the database
             for (T entity : entities) {
                 if (!validationResults.containsKey(entity)) {
                     repository.save(entity);
                 }
             }
-            
+
             // Export the data with validation results
             return excelService.exportToExcelWithConfigFileAndResults(entities, configPath, validationResults);
         } catch (Exception e) {
@@ -141,7 +141,7 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
         try {
             // Get the configuration file path for this entity
             String configPath = getExportConfigPath();
-            
+
             // Get data based on search criteria
             List<T> entities;
             if (searchRequest != null) {
@@ -150,7 +150,7 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
             } else {
                 entities = repository.findByIsDeletedFalse();
             }
-            
+
             // Export data to Excel
             return excelService.exportToExcelWithConfigFile(entities, configPath);
         } catch (Exception e) {
@@ -161,6 +161,7 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
 
     /**
      * Create search specification based on the search request
+     *
      * @param searchRequest Search request
      * @return Specification object
      */
@@ -169,67 +170,68 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
             if (searchRequest == null) {
                 return null;
             }
-            
+
             // Start with a base predicate that excludes deleted records unless includeDeleted is true
             if (searchRequest.getIncludeDeleted() == null || !searchRequest.getIncludeDeleted()) {
                 return criteriaBuilder.equal(root.get("isDeleted"), false);
             }
-            
+
             // Build a list of predicates based on the search criteria
             List<Predicate> predicates = new ArrayList<>();
-            
+
             // Add predicates for each search criterion
             for (BaseSearchRequest.SearchCriteria criterion : searchRequest.getCriteria()) {
                 if (criterion == null || criterion.getProperty() == null || criterion.getOperator() == null) {
                     continue;
                 }
-                
+
                 Predicate predicate = createPredicate(root, criteriaBuilder, criterion);
                 if (predicate != null) {
                     predicates.add(predicate);
                 }
             }
-            
+
             // Combine all predicates with AND
             return predicates.isEmpty() ? null : criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
-    
+
     /**
      * Create a predicate for a single search criterion
-     * @param root Root path
+     *
+     * @param root            Root path
      * @param criteriaBuilder Criteria builder
-     * @param criterion Search criterion
+     * @param criterion       Search criterion
      * @return Predicate
      */
-    protected Predicate createPredicate(jakarta.persistence.criteria.Root<T> root, 
-                                       jakarta.persistence.criteria.CriteriaBuilder criteriaBuilder,
-                                       BaseSearchRequest.SearchCriteria criterion) {
+    protected Predicate createPredicate(jakarta.persistence.criteria.Root<T> root,
+                                        jakarta.persistence.criteria.CriteriaBuilder criteriaBuilder,
+                                        BaseSearchRequest.SearchCriteria criterion) {
         String property = criterion.getProperty();
         BaseSearchRequest.SearchOperator operator = criterion.getOperator();
         String value = criterion.getValue();
         BaseSearchRequest.FieldType type = criterion.getType();
-        
+
         // Handle null checks
         if (operator == BaseSearchRequest.SearchOperator.IS_NULL) {
             return criteriaBuilder.isNull(root.get(property));
         }
-        
+
         if (operator == BaseSearchRequest.SearchOperator.IS_NOT_NULL) {
             return criteriaBuilder.isNotNull(root.get(property));
         }
-        
+
         // Handle value-based operators
         if (value == null || value.isEmpty()) {
             return null;
         }
-        
+
         // Convert value to the appropriate type
         Object typedValue = convertValue(value, type);
         if (typedValue == null) {
             return null;
         }
-        
+
         // Create predicate based on operator
         switch (operator) {
             case EQUALS:
@@ -257,9 +259,9 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
                 if (values.length != 2) {
                     return null;
                 }
-                return criteriaBuilder.between(root.get(property), 
-                    (Comparable) convertValue(values[0], type),
-                    (Comparable) convertValue(values[1], type));
+                return criteriaBuilder.between(root.get(property),
+                        (Comparable) convertValue(values[0], type),
+                        (Comparable) convertValue(values[1], type));
             default:
                 return null;
         }
@@ -269,7 +271,7 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
         if (value == null || value.isEmpty()) {
             return null;
         }
-        
+
         try {
             switch (type) {
                 case STRING:
@@ -294,43 +296,46 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
             return null;
         }
     }
-    
+
     /**
      * Get the path to the import configuration file
+     *
      * @return Configuration file path
      */
     protected abstract String getImportConfigPath();
-    
+
     /**
      * Get the path to the export configuration file
+     *
      * @return Configuration file path
      */
     protected abstract String getExportConfigPath();
-    
+
     /**
      * Validate entities based on configuration
+     *
      * @param entities Entities to validate
-     * @param config Excel configuration
+     * @param config   Excel configuration
      * @return Map of entity to validation error message
      */
     @SneakyThrows
     protected Map<T, String> validateEntities(List<T> entities, SimpleExcelConfig config) {
         Map<T, String> validationErrors = new HashMap<>();
-        
+
         for (T entity : entities) {
             StringBuilder errorMessage = new StringBuilder();
-            
+
             for (SimpleExcelConfig.ColumnMapping column : config.getColumn()) {
                 String fieldName = column.getField();
                 Object value = getFieldValue(entity, fieldName);
-                
+
                 // Required field validation
-                if (column.isRequired() && (value == null || 
-                    (value instanceof String && ((String) value).trim().isEmpty()))) {
+                if (column.isRequired() && (value == null ||
+                        (value instanceof String && ((String) value).trim().isEmpty()))) {
                     errorMessage.append(String.format("%s is required. ", column.getHeaderExcel()));
                     continue;
                 }
-                
+
                 // Type validation
                 if (value != null) {
                     String typeError = validateFieldType(value, column);
@@ -338,7 +343,7 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
                         errorMessage.append(typeError);
                     }
                 }
-                
+
                 // Unique validation
                 if (column.isUnique() && value != null) {
                     String uniqueError = validateUniqueField(entity, fieldName, value);
@@ -347,25 +352,26 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
                     }
                 }
             }
-            
+
             // Add custom validation if needed
             String customValidationError = validateEntity(entity);
             if (customValidationError != null) {
                 errorMessage.append(customValidationError);
             }
-            
+
             // If there are validation errors, add them to the map
             if (errorMessage.length() > 0) {
                 validationErrors.put(entity, errorMessage.toString().trim());
             }
         }
-        
+
         return validationErrors;
     }
-    
+
     /**
      * Validate field type
-     * @param value Field value
+     *
+     * @param value  Field value
      * @param column Column configuration
      * @return Error message if validation fails, null otherwise
      */
@@ -373,7 +379,7 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
         if (value == null) {
             return null;
         }
-        
+
         try {
             // First check the basic type
             switch (column.getType()) {
@@ -407,21 +413,21 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
             log.warn("Error validating field type: {}", e.getMessage());
             return String.format("Error validating %s: %s", column.getHeaderExcel(), e.getMessage());
         }
-        
+
         return null;
     }
-    
+
     protected String validateUniqueField(Object entity, String fieldName, Object value) {
         try {
             // Convert field name to method name (e.g., "username" -> "existsByUsername")
             String methodName = "existsBy" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
-            
+
             // Get the method from repository
             java.lang.reflect.Method method = repository.getClass().getMethod(methodName, value.getClass());
-            
+
             // Invoke the method
             Boolean exists = (Boolean) method.invoke(repository, value);
-            
+
             if (Boolean.TRUE.equals(exists)) {
                 return String.format("%s already exists. ", fieldName);
             }
@@ -431,9 +437,10 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
         }
         return null;
     }
-    
+
     /**
      * Custom entity validation
+     *
      * @param entity Entity to validate
      * @return Error message if validation fails, null otherwise
      */

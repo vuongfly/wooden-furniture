@@ -19,7 +19,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.List;
 
 @RequiredArgsConstructor
-public abstract class BaseControllerImpl<T extends BaseEntity, ID, Req extends BaseRequest<T>, Res extends BaseResponse<T>> 
+public abstract class BaseControllerImpl<T extends BaseEntity, ID, Req extends BaseRequest<T>, Res extends BaseResponse<T>>
         implements BaseController<T, ID, Req, Res> {
 
     @Getter
@@ -121,7 +121,7 @@ public abstract class BaseControllerImpl<T extends BaseEntity, ID, Req extends B
     public ResponseEntity<Resource> importData(@RequestParam("file") MultipartFile file) {
         ByteArrayOutputStream outputStream = service.importData(file);
         ByteArrayResource resource = new ByteArrayResource(outputStream.toByteArray());
-        
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=import_result.xlsx")
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
@@ -135,7 +135,7 @@ public abstract class BaseControllerImpl<T extends BaseEntity, ID, Req extends B
             Pageable pageable) {
         ByteArrayOutputStream outputStream = service.exportData(searchTerm, pageable);
         ByteArrayResource resource = new ByteArrayResource(outputStream.toByteArray());
-        
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xlsx")
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))

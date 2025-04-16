@@ -17,17 +17,17 @@ import java.util.List;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BaseSearchRequest {
-    
+
     /**
      * List of search criteria
      */
     private List<SearchCriteria> criteria = new ArrayList<>();
-    
+
     /**
      * Flag to include soft-deleted records in the search results
      */
     private Boolean includeDeleted = false;
-    
+
     /**
      * Search criteria class
      */
@@ -39,23 +39,23 @@ public class BaseSearchRequest {
          * Field name to search
          */
         private String property;
-        
+
         /**
          * Search operator
          */
         private SearchOperator operator;
-        
+
         /**
          * Search value
          */
         private String value;
-        
+
         /**
          * Field type
          */
         private FieldType type;
     }
-    
+
     /**
      * Search operators
      */
@@ -74,7 +74,7 @@ public class BaseSearchRequest {
         IS_NOT_NULL,
         BETWEEN
     }
-    
+
     /**
      * Field types
      */

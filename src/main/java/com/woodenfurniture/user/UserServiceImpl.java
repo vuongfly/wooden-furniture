@@ -24,18 +24,18 @@ import java.util.Map;
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
-public class UserServiceImpl extends BaseServiceImpl<User, Long, UserCreateRequest, UserResponse> implements UserService {
-    
+public class UserServiceImpl extends BaseServiceImpl<User, Long, UserRequest, UserResponse> implements UserService {
+
     UserRepository userRepository;
     RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
-    
+
     public UserServiceImpl(UserRepository userRepository,
-                          RoleRepository roleRepository,
-                          UserMapper userMapper,
-                          PasswordEncoder passwordEncoder,
-                          ExcelService excelService,
-                          SimpleExcelConfigReader excelConfigReader) {
+                           RoleRepository roleRepository,
+                           UserMapper userMapper,
+                           PasswordEncoder passwordEncoder,
+                           ExcelService excelService,
+                           SimpleExcelConfigReader excelConfigReader) {
         super(userRepository, User.class, excelService, userMapper, excelConfigReader);
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
@@ -62,7 +62,7 @@ public class UserServiceImpl extends BaseServiceImpl<User, Long, UserCreateReque
     }
 
     @Override
-    public UserResponse create(UserCreateRequest request) {
+    public UserResponse create(UserRequest request) {
         // Check if username or email already exists
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
@@ -90,18 +90,18 @@ public class UserServiceImpl extends BaseServiceImpl<User, Long, UserCreateReque
     }
 
     @Override
-    public UserResponse update(Long id, UserCreateRequest request) {
+    public UserResponse update(Long id, UserRequest request) {
         // Find existing user
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED));
 
         // Check if new username or email already exists
-        if (!user.getUsername().equals(request.getUsername()) && 
-            userRepository.existsByUsername(request.getUsername())) {
+        if (!user.getUsername().equals(request.getUsername()) &&
+                userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
-        if (!user.getEmail().equals(request.getEmail()) && 
-            userRepository.existsByEmail(request.getEmail())) {
+        if (!user.getEmail().equals(request.getEmail()) &&
+                userRepository.existsByEmail(request.getEmail())) {
             throw new AppException(ErrorCode.EMAIL_EXISTED);
         }
 
@@ -123,7 +123,7 @@ public class UserServiceImpl extends BaseServiceImpl<User, Long, UserCreateReque
     protected Map<User, String> validateEntities(List<User> entities, SimpleExcelConfig config) {
         // Use the base implementation for common validation
         Map<User, String> validationErrors = super.validateEntities(entities, config);
-        
+
         // Add any user-specific validation here if needed
         return validationErrors;
     }

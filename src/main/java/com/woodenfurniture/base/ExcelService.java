@@ -35,8 +35,8 @@ public interface ExcelService {
      * @return Map of row index to validation error message
      */
     <T> Map<Integer, String> importFromExcelWithValidation(
-            MultipartFile file, 
-            SimpleExcelConfig config, 
+            MultipartFile file,
+            SimpleExcelConfig config,
             Class<T> entityClass,
             Function<T, String> validator);
 
@@ -62,17 +62,17 @@ public interface ExcelService {
      * @return Map of row index to validation error message
      */
     <T> Map<Integer, String> importFromExcelWithConfigFileAndValidation(
-            MultipartFile file, 
-            String configPath, 
+            MultipartFile file,
+            String configPath,
             Class<T> entityClass,
             Function<T, String> validator);
 
     /**
      * Export data to Excel file
      *
-     * @param data        Data to export
-     * @param config      Excel mapping configuration
-     * @param <T>         Entity type
+     * @param data   Data to export
+     * @param config Excel mapping configuration
+     * @param <T>    Entity type
      * @return Excel file as ByteArrayOutputStream
      */
     <T> ByteArrayOutputStream exportToExcel(List<T> data, SimpleExcelConfig config);
@@ -80,23 +80,23 @@ public interface ExcelService {
     /**
      * Export data to Excel file with results
      *
-     * @param data        Data to export
-     * @param config      Excel mapping configuration
-     * @param results     Map of entity to result message
-     * @param <T>         Entity type
+     * @param data    Data to export
+     * @param config  Excel mapping configuration
+     * @param results Map of entity to result message
+     * @param <T>     Entity type
      * @return Excel file as ByteArrayOutputStream
      */
     <T> ByteArrayOutputStream exportToExcelWithResults(
-            List<T> data, 
-            SimpleExcelConfig config, 
+            List<T> data,
+            SimpleExcelConfig config,
             Map<T, String> results);
 
     /**
      * Export data to Excel file using configuration file
      *
-     * @param data        Data to export
-     * @param configPath  Path to the configuration file
-     * @param <T>         Entity type
+     * @param data       Data to export
+     * @param configPath Path to the configuration file
+     * @param <T>        Entity type
      * @return Excel file as ByteArrayOutputStream
      */
     <T> ByteArrayOutputStream exportToExcelWithConfigFile(List<T> data, String configPath);
@@ -104,15 +104,15 @@ public interface ExcelService {
     /**
      * Export data to Excel file with results using configuration file
      *
-     * @param data        Data to export
-     * @param configPath  Path to the configuration file
-     * @param results     Map of entity to result message
-     * @param <T>         Entity type
+     * @param data       Data to export
+     * @param configPath Path to the configuration file
+     * @param results    Map of entity to result message
+     * @param <T>        Entity type
      * @return Excel file as ByteArrayOutputStream
      */
     <T> ByteArrayOutputStream exportToExcelWithConfigFileAndResults(
-            List<T> data, 
-            String configPath, 
+            List<T> data,
+            String configPath,
             Map<T, String> results);
 
     /**

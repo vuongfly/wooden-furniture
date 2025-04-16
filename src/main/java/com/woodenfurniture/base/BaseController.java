@@ -17,13 +17,14 @@ import java.util.List;
 
 /**
  * Base controller interface for common CRUD operations
- * @param <T> Entity type
- * @param <ID> ID type
+ *
+ * @param <T>   Entity type
+ * @param <ID>  ID type
  * @param <Req> Request type
  * @param <Res> Response type
  */
 public interface BaseController<T extends BaseEntity, ID, Req extends BaseRequest<T>, Res extends BaseResponse<T>> {
-    
+
     @PostMapping
     ResponseEntity<ApiResponse<Res>> create(@RequestBody Req request);
 

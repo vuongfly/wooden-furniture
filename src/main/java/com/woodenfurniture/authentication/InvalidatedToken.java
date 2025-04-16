@@ -18,9 +18,9 @@ import java.util.Date;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 /*
-* this class is used to store invalidated tokens
-* TODO: need to run a scheduler to delete expired tokens
-* */
+ * this class is used to store invalidated tokens
+ * TODO: need to run a scheduler to delete expired tokens
+ * */
 public class InvalidatedToken {
     @Id
     String id;

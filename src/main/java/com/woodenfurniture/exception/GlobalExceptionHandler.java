@@ -100,7 +100,7 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(value = AccessDeniedException.class)
-    ResponseEntity<ApiResponse> handlingAccessDeniedException(AccessDeniedException exception){
+    ResponseEntity<ApiResponse> handlingAccessDeniedException(AccessDeniedException exception) {
         ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
 
         return ResponseEntity.status(errorCode.getStatusCode()).body(
@@ -111,7 +111,7 @@ public class GlobalExceptionHandler {
         );
     }
 
-    private String mapAttribute(String message, Map<String, Object> attributes){
+    private String mapAttribute(String message, Map<String, Object> attributes) {
         // replace message with key in attributes to value in attributes
         for (Map.Entry<String, Object> entry : attributes.entrySet()) {
             message = message.replace("{" + entry.getKey() + "}", entry.getValue().toString());

@@ -2,9 +2,10 @@ package com.woodenfurniture.user;
 
 import com.woodenfurniture.base.BaseService;
 
-public interface UserService extends BaseService<User, Long, UserCreateRequest, UserResponse> {
+public interface UserService extends BaseService<User, Long, UserRequest, UserResponse> {
     /**
      * Get the current user's information
+     *
      * @return User information
      */
     UserResponse getMyInfo();

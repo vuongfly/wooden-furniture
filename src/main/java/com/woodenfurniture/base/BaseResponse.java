@@ -5,6 +5,7 @@ import lombok.Setter;
 
 /**
  * Base class for all response DTOs
+ *
  * @param <T> The entity type this response maps from
  */
 @Getter

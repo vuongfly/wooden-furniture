@@ -42,15 +42,15 @@ public class ExcelServiceImpl implements ExcelService {
 
     @Override
     public <T> Map<Integer, String> importFromExcelWithValidation(
-            MultipartFile file, 
-            SimpleExcelConfig config, 
+            MultipartFile file,
+            SimpleExcelConfig config,
             Class<T> entityClass,
             java.util.function.Function<T, String> validator) {
         try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0); // Use the first sheet
             List<T> entities = readSheet(sheet, config, entityClass);
             Map<Integer, String> validationErrors = new HashMap<>();
-            
+
             for (int i = 0; i < entities.size(); i++) {
                 T entity = entities.get(i);
                 String error = validator.apply(entity);
@@ -58,7 +58,7 @@ public class ExcelServiceImpl implements ExcelService {
                     validationErrors.put(i + config.getRowIndex() + 1, error);
                 }
             }
-            
+
             return validationErrors;
         } catch (IOException e) {
             log.error("Error importing Excel file with validation", e);
@@ -74,8 +74,8 @@ public class ExcelServiceImpl implements ExcelService {
 
     @Override
     public <T> Map<Integer, String> importFromExcelWithConfigFileAndValidation(
-            MultipartFile file, 
-            String configPath, 
+            MultipartFile file,
+            String configPath,
             Class<T> entityClass,
             java.util.function.Function<T, String> validator) {
         SimpleExcelConfig config = excelConfigReader.readConfig(configPath);
@@ -97,8 +97,8 @@ public class ExcelServiceImpl implements ExcelService {
 
     @Override
     public <T> ByteArrayOutputStream exportToExcelWithResults(
-            List<T> data, 
-            SimpleExcelConfig config, 
+            List<T> data,
+            SimpleExcelConfig config,
             Map<T, String> results) {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet(config.getName());
@@ -119,8 +119,8 @@ public class ExcelServiceImpl implements ExcelService {
 
     @Override
     public <T> ByteArrayOutputStream exportToExcelWithConfigFileAndResults(
-            List<T> data, 
-            String configPath, 
+            List<T> data,
+            String configPath,
             Map<T, String> results) {
         SimpleExcelConfig config = excelConfigReader.readConfig(configPath);
         return exportToExcelWithResults(data, config, results);
@@ -146,14 +146,14 @@ public class ExcelServiceImpl implements ExcelService {
 
     private <T> List<T> readSheet(Sheet sheet, SimpleExcelConfig config, Class<T> entityClass) {
         List<T> entities = new ArrayList<>();
-        
+
         // Find the header row
         int headerRowIndex = config.getRowIndex();
         Row headerRow = sheet.getRow(headerRowIndex);
         if (headerRow == null) {
             throw new IllegalArgumentException("Header row not found at index " + headerRowIndex);
         }
-        
+
         // Map header cells to column indices
         Map<String, Integer> headerMap = new HashMap<>();
         for (int i = config.getColumnIndex(); i < headerRow.getLastCellNum(); i++) {
@@ -163,17 +163,17 @@ public class ExcelServiceImpl implements ExcelService {
                 headerMap.put(headerValue, i);
             }
         }
-        
+
         // Read data rows
         for (int i = headerRowIndex + 1; i <= sheet.getLastRowNum(); i++) {
             Row row = sheet.getRow(i);
             if (row == null) {
                 continue;
             }
-            
+
             try {
                 T entity = entityClass.getDeclaredConstructor().newInstance();
-                
+
                 // Map Excel columns to entity fields
                 for (SimpleExcelConfig.ColumnMapping mapping : config.getColumn()) {
                     Integer columnIndex = headerMap.get(mapping.getHeaderExcel());
@@ -181,26 +181,26 @@ public class ExcelServiceImpl implements ExcelService {
                         log.warn("Column '{}' not found in Excel file", mapping.getHeaderExcel());
                         continue;
                     }
-                    
+
                     Cell cell = row.getCell(columnIndex);
                     if (cell != null) {
                         Object value = getCellValue(cell);
                         setFieldValue(entity, mapping.getField(), value);
                     }
                 }
-                
+
                 entities.add(entity);
             } catch (Exception e) {
                 log.error("Error processing row {}: {}", i + 1, e.getMessage());
             }
         }
-        
+
         return entities;
     }
 
     private void writeHeader(Sheet sheet, SimpleExcelConfig config) {
         Row headerRow = sheet.createRow(config.getRowIndex());
-        
+
         int columnIndex = config.getColumnIndex();
         for (SimpleExcelConfig.ColumnMapping mapping : config.getColumn()) {
             Cell cell = headerRow.createCell(columnIndex++);
@@ -210,11 +210,11 @@ public class ExcelServiceImpl implements ExcelService {
 
     private <T> void writeData(Sheet sheet, List<T> data, SimpleExcelConfig config) {
         int rowIndex = config.getRowIndex() + 1;
-        
+
         for (T entity : data) {
             Row row = sheet.createRow(rowIndex++);
             int columnIndex = config.getColumnIndex();
-            
+
             for (SimpleExcelConfig.ColumnMapping mapping : config.getColumn()) {
                 Cell cell = row.createCell(columnIndex++);
                 Object value = getFieldValue(entity, mapping.getField());
@@ -225,18 +225,18 @@ public class ExcelServiceImpl implements ExcelService {
 
     private <T> void writeDataWithResults(Sheet sheet, List<T> data, SimpleExcelConfig config, Map<T, String> results) {
         int rowIndex = config.getRowIndex() + 1;
-        
+
         for (T entity : data) {
             Row row = sheet.createRow(rowIndex++);
             int columnIndex = config.getColumnIndex();
-            
+
             // Write entity data
             for (SimpleExcelConfig.ColumnMapping mapping : config.getColumn()) {
                 Cell cell = row.createCell(columnIndex++);
                 Object value = getFieldValue(entity, mapping.getField());
                 setCellValue(cell, value);
             }
-            
+
             // Write result if available
             if (results.containsKey(entity)) {
                 Cell resultCell = row.createCell(columnIndex);
@@ -255,7 +255,7 @@ public class ExcelServiceImpl implements ExcelService {
         if (cell == null) {
             return null;
         }
-        
+
         switch (cell.getCellType()) {
             case STRING:
                 return cell.getStringCellValue();
@@ -282,7 +282,7 @@ public class ExcelServiceImpl implements ExcelService {
             cell.setBlank();
             return;
         }
-        
+
         if (value instanceof String) {
             cell.setCellValue((String) value);
         } else if (value instanceof Number) {
@@ -311,7 +311,7 @@ public class ExcelServiceImpl implements ExcelService {
         try {
             Field field = obj.getClass().getDeclaredField(fieldName);
             field.setAccessible(true);
-            
+
             // Convert value to the appropriate type
             if (value != null) {
                 if (field.getType() == String.class) {

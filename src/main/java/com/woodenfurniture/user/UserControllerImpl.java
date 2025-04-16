@@ -8,7 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class UserControllerImpl extends BaseControllerImpl<User, Long, UserCreateRequest, UserResponse> implements UserController {
+public class UserControllerImpl extends BaseControllerImpl<User, Long, UserRequest, UserResponse> implements UserController {
 
     public UserControllerImpl(UserService service) {
         super(service, "User");

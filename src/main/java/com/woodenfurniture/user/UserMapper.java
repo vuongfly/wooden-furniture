@@ -1,25 +1,18 @@
 package com.woodenfurniture.user;
 
 import com.woodenfurniture.base.BaseMapper;
+import com.woodenfurniture.role.RoleMapper;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.factory.Mappers;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {RoleMapper.class})
 public interface UserMapper extends BaseMapper<User, UserResponse> {
-    
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "roles", ignore = true)
-    @Mapping(target = "password", ignore = true)
-    User toEntity(UserCreateRequest request);
-    
-    @Mapping(target = "roles", ignore = true)
-    @Mapping(target = "password", ignore = true)
-    void updateUser(@MappingTarget User entity, UserUpdateRequest request);
-    
+
+    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
+
     @Override
     UserResponse toDto(User entity);
-    
+
     default UserResponse toResponse(User entity) {
         return toDto(entity);
     }
