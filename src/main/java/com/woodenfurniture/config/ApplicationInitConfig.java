@@ -1,6 +1,7 @@
 package com.woodenfurniture.config;
 
 import com.woodenfurniture.role.Role;
+import com.woodenfurniture.role.RoleRepository;
 import com.woodenfurniture.user.User;
 import com.woodenfurniture.user.UserRepository;
 import lombok.AccessLevel;
@@ -29,7 +30,7 @@ public class ApplicationInitConfig {
             // create default role ADMIN
             Set<Role> roles = new HashSet<>();
             if (userRepository.findByUsername("admin").isEmpty()) {
-                var roleAdmin = roleRepository.findById("ADMIN");
+                var roleAdmin = roleRepository.findByName("ADMIN");
                 if (roleAdmin.isEmpty()) {
                     Role role = Role.builder()
                             .name("ADMIN")

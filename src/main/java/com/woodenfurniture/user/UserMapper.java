@@ -12,7 +12,4 @@ public interface UserMapper extends BaseMapper<User, UserResponse> {
     @Override
     UserResponse toDto(User entity);
 
-    default UserResponse toResponse(User entity) {
-        return toDto(entity);
-    }
 }
