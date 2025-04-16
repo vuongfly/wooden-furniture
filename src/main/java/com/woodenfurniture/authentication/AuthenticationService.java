@@ -40,7 +40,7 @@ import java.util.UUID;
 @Slf4j
 public class AuthenticationService {
     private final InvalidatedTokenRepository invalidatedTokenRepository;
-    UserRepository repo;
+    private final UserRepository repo;
 
     @NonFinal
     @Value(("${jwt.signerKey}"))
