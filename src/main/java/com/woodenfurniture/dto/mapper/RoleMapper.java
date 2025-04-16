@@ -1,10 +1,9 @@
 package com.woodenfurniture.dto.mapper;
 
 import com.woodenfurniture.dto.request.RoleRequest;
-import com.woodenfurniture.dto.request.UserUpdateRequest;
+import com.woodenfurniture.user.UserUpdateRequest;
 import com.woodenfurniture.dto.response.RoleResponse;
 import com.woodenfurniture.entity.Role;
-import com.woodenfurniture.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

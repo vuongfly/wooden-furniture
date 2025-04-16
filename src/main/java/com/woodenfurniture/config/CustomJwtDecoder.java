@@ -2,7 +2,7 @@ package com.woodenfurniture.config;
 
 import com.nimbusds.jose.JOSEException;
 import com.woodenfurniture.dto.request.IntrospectRequest;
-import com.woodenfurniture.service.AuthenticationService;
+import com.woodenfurniture.authentication.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;

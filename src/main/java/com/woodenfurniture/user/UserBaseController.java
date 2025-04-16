@@ -1,8 +1,6 @@
-package com.woodenfurniture.controller;
+package com.woodenfurniture.user;
 
 import com.woodenfurniture.base.BaseControllerImpl;
-import com.woodenfurniture.entity.User;
-import com.woodenfurniture.service.UserService;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 

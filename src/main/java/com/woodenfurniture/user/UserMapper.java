@@ -1,9 +1,5 @@
-package com.woodenfurniture.dto.mapper;
+package com.woodenfurniture.user;
 
-import com.woodenfurniture.dto.request.UserCreateRequest;
-import com.woodenfurniture.dto.request.UserUpdateRequest;
-import com.woodenfurniture.dto.response.UserResponse;
-import com.woodenfurniture.entity.User;
 import com.woodenfurniture.base.BaseMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

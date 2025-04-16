@@ -8,7 +8,7 @@ import com.woodenfurniture.dto.request.RefreshRequest;
 import com.woodenfurniture.dto.response.ApiResponse;
 import com.woodenfurniture.dto.response.AuthenticationResponse;
 import com.woodenfurniture.dto.response.IntrospectResponse;
-import com.woodenfurniture.service.AuthenticationService;
+import com.woodenfurniture.authentication.AuthenticationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

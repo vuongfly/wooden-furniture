@@ -1,8 +1,6 @@
-package com.woodenfurniture.service;
+package com.woodenfurniture.user;
 
 import com.woodenfurniture.base.BaseService;
-import com.woodenfurniture.dto.response.UserResponse;
-import com.woodenfurniture.entity.User;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;

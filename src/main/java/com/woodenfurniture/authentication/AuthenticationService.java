@@ -1,4 +1,4 @@
-package com.woodenfurniture.service;
+package com.woodenfurniture.authentication;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -17,11 +17,11 @@ import com.woodenfurniture.dto.request.RefreshRequest;
 import com.woodenfurniture.dto.response.AuthenticationResponse;
 import com.woodenfurniture.dto.response.IntrospectResponse;
 import com.woodenfurniture.entity.InvalidatedToken;
-import com.woodenfurniture.entity.User;
 import com.woodenfurniture.exception.AppException;
 import com.woodenfurniture.exception.ErrorCode;
 import com.woodenfurniture.repository.InvalidatedTokenRepository;
-import com.woodenfurniture.repository.UserRepository;
+import com.woodenfurniture.user.User;
+import com.woodenfurniture.user.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -128,7 +128,7 @@ public class AuthenticationService {
 
         // generate new token
         var username = signedJWT.getJWTClaimsSet().getSubject();
-        var user = repo.findByUsername(username)
+        User user = repo.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         var token = generateToken(user);
         return AuthenticationResponse.builder()

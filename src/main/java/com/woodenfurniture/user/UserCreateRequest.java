@@ -1,4 +1,4 @@
-package com.woodenfurniture.dto.request;
+package com.woodenfurniture.user;
 
 import com.woodenfurniture.enums.Gender;
 import com.woodenfurniture.validation.annotation.DobConstraint;

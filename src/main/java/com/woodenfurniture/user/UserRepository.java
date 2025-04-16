@@ -1,7 +1,6 @@
-package com.woodenfurniture.repository;
+package com.woodenfurniture.user;
 
 import com.woodenfurniture.base.BaseRepository;
-import com.woodenfurniture.entity.User;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;

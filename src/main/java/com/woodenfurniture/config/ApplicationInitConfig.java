@@ -1,9 +1,8 @@
 package com.woodenfurniture.config;
 
 import com.woodenfurniture.entity.Role;
-import com.woodenfurniture.entity.User;
 import com.woodenfurniture.repository.RoleRepository;
-import com.woodenfurniture.repository.UserRepository;
+import com.woodenfurniture.user.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

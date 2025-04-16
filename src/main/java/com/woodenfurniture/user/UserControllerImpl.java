@@ -1,10 +1,6 @@
-package com.woodenfurniture.controller.impl;
+package com.woodenfurniture.user;
 
-import com.woodenfurniture.controller.UserBaseController;
-import com.woodenfurniture.controller.UserController;
 import com.woodenfurniture.dto.response.ApiResponse;
-import com.woodenfurniture.dto.response.UserResponse;
-import com.woodenfurniture.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
