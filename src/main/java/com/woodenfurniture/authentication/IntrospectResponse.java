@@ -1,4 +1,4 @@
-package com.woodenfurniture.dto.request;
+package com.woodenfurniture.authentication;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -12,6 +12,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class LogoutRequest {
-    String token;
+public class IntrospectResponse {
+    boolean valid;
 }

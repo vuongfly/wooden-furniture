@@ -1,12 +1,7 @@
-package com.woodenfurniture.service;
+package com.woodenfurniture.permission;
 
-import com.woodenfurniture.dto.mapper.PermissionMapper;
-import com.woodenfurniture.dto.request.PermissionRequest;
-import com.woodenfurniture.dto.response.PermissionResponse;
-import com.woodenfurniture.entity.Permission;
 import com.woodenfurniture.exception.AppException;
 import com.woodenfurniture.exception.ErrorCode;
-import com.woodenfurniture.repository.PermissionRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

@@ -1,7 +1,5 @@
-package com.woodenfurniture.entity;
+package com.woodenfurniture.authentication;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,9 +12,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity
-public class Permission {
-    @Id
-    String name;
-    String description;
+public class LogoutRequest {
+    String token;
 }

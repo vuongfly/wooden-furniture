@@ -1,9 +1,6 @@
-package com.woodenfurniture.controller;
+package com.woodenfurniture.role;
 
-import com.woodenfurniture.dto.request.RoleRequest;
-import com.woodenfurniture.dto.response.ApiResponse;
-import com.woodenfurniture.dto.response.RoleResponse;
-import com.woodenfurniture.service.RoleService;
+import com.woodenfurniture.base.ApiResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

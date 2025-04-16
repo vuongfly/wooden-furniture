@@ -1,10 +1,7 @@
-package com.woodenfurniture.controller;
+package com.woodenfurniture.permission;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.woodenfurniture.dto.request.PermissionRequest;
-import com.woodenfurniture.dto.response.ApiResponse;
-import com.woodenfurniture.dto.response.PermissionResponse;
-import com.woodenfurniture.service.PermissionService;
+import com.woodenfurniture.base.ApiResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

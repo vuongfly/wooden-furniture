@@ -1,6 +1,5 @@
 package com.woodenfurniture.base;
 
-import com.woodenfurniture.dto.response.ApiResponse;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;

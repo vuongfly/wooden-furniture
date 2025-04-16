@@ -1,7 +1,7 @@
 package com.woodenfurniture.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.woodenfurniture.dto.response.ApiResponse;
+import com.woodenfurniture.base.ApiResponse;
 import com.woodenfurniture.exception.ErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

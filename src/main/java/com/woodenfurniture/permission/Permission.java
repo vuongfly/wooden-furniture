@@ -1,5 +1,7 @@
-package com.woodenfurniture.dto.request;
+package com.woodenfurniture.permission;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,6 +14,9 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class IntrospectRequest {
-    String token;
+@Entity
+public class Permission {
+    @Id
+    String name;
+    String description;
 }

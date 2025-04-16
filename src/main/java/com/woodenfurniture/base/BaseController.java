@@ -1,6 +1,5 @@
 package com.woodenfurniture.base;
 
-import com.woodenfurniture.dto.response.ApiResponse;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

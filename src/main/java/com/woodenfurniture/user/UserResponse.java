@@ -1,7 +1,7 @@
 package com.woodenfurniture.user;
 
 import com.woodenfurniture.base.BaseDTO;
-import com.woodenfurniture.dto.response.RoleResponse;
+import com.woodenfurniture.role.RoleResponse;
 import com.woodenfurniture.enums.Gender;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

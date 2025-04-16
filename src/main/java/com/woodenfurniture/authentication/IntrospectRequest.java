@@ -1,4 +1,4 @@
-package com.woodenfurniture.dto.request;
+package com.woodenfurniture.authentication;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -12,11 +12,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ChartSearchRequest {
-    private String name;
-    private String code;
-    private String description;
-    private Boolean isShowTitle;
-    private Boolean isShowLegend;
-    private Long typeId;
-} 
+public class IntrospectRequest {
+    String token;
+}

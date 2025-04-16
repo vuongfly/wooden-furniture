@@ -1,6 +1,6 @@
 package com.woodenfurniture.exception;
 
-import com.woodenfurniture.dto.response.ApiResponse;
+import com.woodenfurniture.base.ApiResponse;
 import jakarta.validation.ConstraintViolation;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

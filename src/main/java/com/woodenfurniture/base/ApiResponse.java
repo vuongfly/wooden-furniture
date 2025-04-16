@@ -1,4 +1,4 @@
-package com.woodenfurniture.dto.response;
+package com.woodenfurniture.base;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AccessLevel;

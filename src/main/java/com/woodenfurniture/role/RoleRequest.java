@@ -1,6 +1,5 @@
-package com.woodenfurniture.dto.request;
+package com.woodenfurniture.role;
 
-import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,13 +7,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Set;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PermissionRequest {
-    @Id
+public class RoleRequest {
     String name;
     String description;
+    Set<String> permissions;
 }

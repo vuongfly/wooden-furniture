@@ -1,6 +1,5 @@
-package com.woodenfurniture.repository;
+package com.woodenfurniture.permission;
 
-import com.woodenfurniture.entity.Permission;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

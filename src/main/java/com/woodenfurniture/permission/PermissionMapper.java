@@ -1,10 +1,7 @@
-package com.woodenfurniture.dto.mapper;
+package com.woodenfurniture.permission;
 
-import com.woodenfurniture.dto.request.PermissionRequest;
 import com.woodenfurniture.user.User;
 import com.woodenfurniture.user.UserUpdateRequest;
-import com.woodenfurniture.dto.response.PermissionResponse;
-import com.woodenfurniture.entity.Permission;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

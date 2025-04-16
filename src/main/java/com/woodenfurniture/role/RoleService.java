@@ -1,13 +1,8 @@
-package com.woodenfurniture.service;
+package com.woodenfurniture.role;
 
-import com.woodenfurniture.dto.mapper.RoleMapper;
-import com.woodenfurniture.dto.request.RoleRequest;
-import com.woodenfurniture.dto.response.RoleResponse;
-import com.woodenfurniture.entity.Role;
 import com.woodenfurniture.exception.AppException;
 import com.woodenfurniture.exception.ErrorCode;
-import com.woodenfurniture.repository.PermissionRepository;
-import com.woodenfurniture.repository.RoleRepository;
+import com.woodenfurniture.permission.PermissionRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

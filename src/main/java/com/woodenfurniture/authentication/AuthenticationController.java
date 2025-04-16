@@ -1,11 +1,7 @@
 package com.woodenfurniture.authentication;
 
 import com.nimbusds.jose.JOSEException;
-import com.woodenfurniture.dto.request.IntrospectRequest;
-import com.woodenfurniture.dto.request.LogoutRequest;
-import com.woodenfurniture.dto.request.RefreshRequest;
-import com.woodenfurniture.dto.response.ApiResponse;
-import com.woodenfurniture.dto.response.IntrospectResponse;
+import com.woodenfurniture.base.ApiResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
