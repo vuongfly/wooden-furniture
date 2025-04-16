@@ -1,4 +1,4 @@
-package com.woodenfurniture.authentication;
+package com.woodenfurniture.authentication.service;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -10,16 +10,16 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import com.woodenfurniture.dto.request.AuthenticationRequest;
+import com.woodenfurniture.authentication.dto.AuthenticationRequest;
 import com.woodenfurniture.dto.request.IntrospectRequest;
 import com.woodenfurniture.dto.request.LogoutRequest;
 import com.woodenfurniture.dto.request.RefreshRequest;
-import com.woodenfurniture.dto.response.AuthenticationResponse;
+import com.woodenfurniture.authentication.dto.AuthenticationResponse;
 import com.woodenfurniture.dto.response.IntrospectResponse;
-import com.woodenfurniture.entity.InvalidatedToken;
+import com.woodenfurniture.authentication.dto.InvalidatedToken;
 import com.woodenfurniture.exception.AppException;
 import com.woodenfurniture.exception.ErrorCode;
-import com.woodenfurniture.repository.InvalidatedTokenRepository;
+import com.woodenfurniture.authentication.repository.InvalidatedTokenRepository;
 import com.woodenfurniture.user.User;
 import com.woodenfurniture.user.UserRepository;
 import lombok.AccessLevel;
@@ -214,5 +214,4 @@ public class AuthenticationService {
         response.setAuthorities(authentication.getAuthorities());
         return response;
     }
-
-}
+} 
