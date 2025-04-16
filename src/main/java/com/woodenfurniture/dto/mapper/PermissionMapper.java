@@ -1,6 +1,7 @@
 package com.woodenfurniture.dto.mapper;
 
 import com.woodenfurniture.dto.request.PermissionRequest;
+import com.woodenfurniture.user.User;
 import com.woodenfurniture.user.UserUpdateRequest;
 import com.woodenfurniture.dto.response.PermissionResponse;
 import com.woodenfurniture.entity.Permission;
