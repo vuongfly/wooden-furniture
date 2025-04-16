@@ -14,13 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
@@ -28,69 +22,69 @@ import java.util.List;
 
 @Getter
 @RequiredArgsConstructor
-public abstract class BaseController<T extends BaseEntity, ID, DTO> {
+public abstract class BaseController<T extends BaseEntity, ID> {
 
-    protected final BaseService<T, ID, DTO> service;
+    protected final BaseService<T, ID> service;
     protected final String entityName;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<DTO>> create(@RequestBody DTO dto) {
-        DTO created = service.create(dto);
+    public ResponseEntity<ApiResponse<?>> create(@RequestBody Object request) {
+        Object response = service.create(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.<DTO>builder()
+                .body(ApiResponse.builder()
                         .code(HttpStatus.CREATED.value())
                         .message(entityName + " created successfully")
-                        .result(created)
+                        .result(response)
                         .build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<DTO>> update(@PathVariable ID id, @RequestBody DTO dto) {
-        DTO updated = service.update(id, dto);
-        return ResponseEntity.ok(ApiResponse.<DTO>builder()
+    public ResponseEntity<ApiResponse<?>> update(@PathVariable ID id, @RequestBody Object request) {
+        Object response = service.update(id, request);
+        return ResponseEntity.ok(ApiResponse.builder()
                 .code(HttpStatus.OK.value())
                 .message(entityName + " updated successfully")
-                .result(updated)
+                .result(response)
                 .build());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<DTO>> getById(@PathVariable ID id) {
-        DTO dto = service.getById(id);
-        return ResponseEntity.ok(ApiResponse.<DTO>builder()
+    public ResponseEntity<ApiResponse<?>> getById(@PathVariable ID id) {
+        Object response = service.getById(id);
+        return ResponseEntity.ok(ApiResponse.builder()
                 .code(HttpStatus.OK.value())
                 .message(entityName + " retrieved successfully")
-                .result(dto)
+                .result(response)
                 .build());
     }
 
     @GetMapping("/uuid/{uuid}")
-    public ResponseEntity<ApiResponse<DTO>> getByUuid(@PathVariable String uuid) {
-        DTO dto = service.getByUuid(uuid);
-        return ResponseEntity.ok(ApiResponse.<DTO>builder()
+    public ResponseEntity<ApiResponse<?>> getByUuid(@PathVariable String uuid) {
+        Object response = service.getByUuid(uuid);
+        return ResponseEntity.ok(ApiResponse.builder()
                 .code(HttpStatus.OK.value())
                 .message(entityName + " retrieved successfully")
-                .result(dto)
+                .result(response)
                 .build());
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<DTO>>> getAll() {
-        List<DTO> dtos = service.getAll();
-        return ResponseEntity.ok(ApiResponse.<List<DTO>>builder()
+    public ResponseEntity<ApiResponse<?>> getAll() {
+        List<?> responses = service.getAll();
+        return ResponseEntity.ok(ApiResponse.builder()
                 .code(HttpStatus.OK.value())
                 .message(entityName + "s retrieved successfully")
-                .result(dtos)
+                .result(responses)
                 .build());
     }
 
     @GetMapping("/page")
-    public ResponseEntity<ApiResponse<Page<DTO>>> getAll(Pageable pageable) {
-        Page<DTO> dtos = service.getAll(pageable);
-        return ResponseEntity.ok(ApiResponse.<Page<DTO>>builder()
+    public ResponseEntity<ApiResponse<Page<?>>> getAll(Pageable pageable) {
+        Page<?> responses = service.getAll(pageable);
+        return ResponseEntity.ok(ApiResponse.<Page<?>>builder()
                 .code(HttpStatus.OK.value())
                 .message(entityName + "s retrieved successfully")
-                .result(dtos)
+                .result(responses)
                 .build());
     }
 
@@ -113,14 +107,14 @@ public abstract class BaseController<T extends BaseEntity, ID, DTO> {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<Page<DTO>>> search(
+    public ResponseEntity<ApiResponse<Page<?>>> search(
             @RequestParam(required = false) BaseSearchRequest searchRequest,
             Pageable pageable) {
-        Page<DTO> dtos = service.search(searchRequest, pageable);
-        return ResponseEntity.ok(ApiResponse.<Page<DTO>>builder()
+        Page<?> responses = service.search(searchRequest, pageable);
+        return ResponseEntity.ok(ApiResponse.<Page<?>>builder()
                 .code(HttpStatus.OK.value())
                 .message(entityName + "s retrieved successfully")
-                .result(dtos)
+                .result(responses)
                 .build());
     }
 

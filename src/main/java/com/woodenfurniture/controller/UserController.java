@@ -21,7 +21,7 @@ import java.util.List;
 @RequestMapping("/users")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
-public class UserController extends BaseController<User, Long, UserResponse> {
+public class UserController extends BaseController<User, Long> {
     
     private final UserService userService;
 

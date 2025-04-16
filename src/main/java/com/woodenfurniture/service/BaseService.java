@@ -13,51 +13,50 @@ import java.util.List;
  * Base service interface for common CRUD operations
  * @param <T> Entity type
  * @param <ID> ID type
- * @param <DTO> DTO type
  */
-public interface BaseService<T extends BaseEntity, ID, DTO> {
+public interface BaseService<T extends BaseEntity, ID> {
     
     /**
      * Create a new entity
-     * @param dto DTO with data to create the entity
-     * @return Created entity as DTO
+     * @param request Request object with data to create the entity
+     * @return Created entity response
      */
-    DTO create(DTO dto);
+    Object create(Object request);
     
     /**
      * Update an existing entity
      * @param id Entity ID
-     * @param dto DTO with data to update the entity
-     * @return Updated entity as DTO
+     * @param request Request object with data to update the entity
+     * @return Updated entity response
      */
-    DTO update(ID id, DTO dto);
+    Object update(ID id, Object request);
     
     /**
      * Get entity by ID
      * @param id Entity ID
-     * @return Entity as DTO
+     * @return Entity response
      */
-    DTO getById(ID id);
+    Object getById(ID id);
     
     /**
      * Get entity by UUID
      * @param uuid Entity UUID
-     * @return Entity as DTO
+     * @return Entity response
      */
-    DTO getByUuid(String uuid);
+    Object getByUuid(String uuid);
     
     /**
      * Get all entities
-     * @return List of entities as DTOs
+     * @return List of entity responses
      */
-    List<DTO> getAll();
+    List<?> getAll();
     
     /**
      * Get all entities with pagination
      * @param pageable Pageable object
-     * @return Page of entities as DTOs
+     * @return Page of entity responses
      */
-    Page<DTO> getAll(Pageable pageable);
+    Page<?> getAll(Pageable pageable);
     
     /**
      * Delete entity by ID (soft delete)
@@ -75,9 +74,9 @@ public interface BaseService<T extends BaseEntity, ID, DTO> {
      * Search entities based on search criteria
      * @param searchRequest Search request
      * @param pageable Pageable object for pagination and sorting
-     * @return Page of DTOs
+     * @return Page of responses
      */
-    Page<DTO> search(BaseSearchRequest searchRequest, Pageable pageable);
+    Page<?> search(BaseSearchRequest searchRequest, Pageable pageable);
     
     /**
      * Import data from Excel file

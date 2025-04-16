@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 /**
  * Base mapper interface for mapping between entities and DTOs
  * @param <E> Entity type
- * @param <D> DTO type
  */
 public interface BaseMapper<E extends BaseEntity, D> {
     
@@ -21,11 +20,11 @@ public interface BaseMapper<E extends BaseEntity, D> {
     D toDto(E entity);
     
     /**
-     * Map from DTO to entity
-     * @param dto DTO to map
+     * Map from request object to entity
+     * @param request Request object to map
      * @return Mapped entity
      */
-    E toEntity(D dto);
+    E toEntity(Object request);
     
     /**
      * Map from entity list to DTO list
@@ -42,23 +41,23 @@ public interface BaseMapper<E extends BaseEntity, D> {
     }
     
     /**
-     * Map from DTO list to entity list
-     * @param dtos DTOs to map
+     * Map from request list to entity list
+     * @param requests Requests to map
      * @return Mapped entities
      */
-    default List<E> toEntityList(List<D> dtos) {
-        if (dtos == null) {
+    default List<E> toEntityList(List<Object> requests) {
+        if (requests == null) {
             return null;
         }
-        return dtos.stream()
+        return requests.stream()
                 .map(this::toEntity)
                 .collect(Collectors.toList());
     }
     
     /**
-     * Update entity from DTO
-     * @param dto DTO with new values
+     * Update entity from request object
+     * @param request Request object with new values
      * @param entity Entity to update
      */
-    void updateEntityFromDto(D dto, @MappingTarget E entity);
+    void updateEntityFromDto(Object request, @MappingTarget E entity);
 } 

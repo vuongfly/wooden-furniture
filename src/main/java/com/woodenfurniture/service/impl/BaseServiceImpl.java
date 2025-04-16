@@ -32,55 +32,55 @@ import static org.springframework.security.util.FieldUtils.getFieldValue;
 
 @Slf4j
 @RequiredArgsConstructor
-public abstract class BaseServiceImpl<T extends BaseEntity, ID, DTO> implements BaseService<T, ID, DTO> {
+public abstract class BaseServiceImpl<T extends BaseEntity, ID> implements BaseService<T, ID> {
 
     protected final BaseRepository<T, ID> repository;
     protected final Class<T> entityClass;
     protected final ExcelService excelService;
-    protected final BaseMapper<T, DTO> mapper;
+    protected final BaseMapper<T, ?> mapper;
     protected final SimpleExcelConfigReader excelConfigReader;
 
     @Override
     @Transactional
-    public DTO create(DTO dto) {
-        T entity = mapper.toEntity(dto);
+    public Object create(Object request) {
+        T entity = mapper.toEntity(request);
         entity = repository.save(entity);
         return mapper.toDto(entity);
     }
 
     @Override
     @Transactional
-    public DTO update(ID id, DTO dto) {
+    public Object update(ID id, Object request) {
         T entity = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(entityClass.getSimpleName() + "id: " + id));
         
-        mapper.updateEntityFromDto(dto, entity);
+        mapper.updateEntityFromDto(request, entity);
         entity = repository.save(entity);
         return mapper.toDto(entity);
     }
 
     @Override
-    public DTO getById(ID id) {
+    public Object getById(ID id) {
         T entity = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(entityClass.getSimpleName() + "id: " + id));
         return mapper.toDto(entity);
     }
 
     @Override
-    public DTO getByUuid(String uuid) {
+    public Object getByUuid(String uuid) {
         T entity = repository.findByUuid(uuid)
                 .orElseThrow(() -> new ResourceNotFoundException(entityClass.getSimpleName() + "uuid" + uuid));
         return mapper.toDto(entity);
     }
 
     @Override
-    public List<DTO> getAll() {
+    public List<?> getAll() {
         List<T> entities = repository.findByIsDeletedFalse();
         return mapper.toDtoList(entities);
     }
 
     @Override
-    public Page<DTO> getAll(Pageable pageable) {
+    public Page<?> getAll(Pageable pageable) {
         Page<T> entities = repository.findByIsDeletedFalse(pageable);
         return entities.map(mapper::toDto);
     }
@@ -104,7 +104,7 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, DTO> implements 
     }
 
     @Override
-    public Page<DTO> search(BaseSearchRequest searchRequest, Pageable pageable) {
+    public Page<?> search(BaseSearchRequest searchRequest, Pageable pageable) {
         Specification<T> spec = createSearchSpecification(searchRequest);
         Page<T> entities = repository.findAll(spec, pageable);
         return entities.map(mapper::toDto);
@@ -250,35 +250,26 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, DTO> implements 
             case LESS_THAN_OR_EQUALS:
                 return criteriaBuilder.lessThanOrEqualTo(root.get(property), (Comparable) typedValue);
             case LIKE:
-                return criteriaBuilder.like(root.get(property), "%" + value + "%");
+                return criteriaBuilder.like(root.get(property), "%" + typedValue + "%");
             case NOT_LIKE:
-                return criteriaBuilder.notLike(root.get(property), "%" + value + "%");
+                return criteriaBuilder.notLike(root.get(property), "%" + typedValue + "%");
             case IN:
-                return root.get(property).in(Arrays.asList(value.split(",")));
+                return root.get(property).in(Arrays.asList(typedValue.toString().split(",")));
             case NOT_IN:
-                return criteriaBuilder.not(root.get(property).in(Arrays.asList(value.split(","))));
+                return criteriaBuilder.not(root.get(property).in(Arrays.asList(typedValue.toString().split(","))));
             case BETWEEN:
-                String[] parts = value.split(",");
-                if (parts.length != 2) {
+                String[] values = typedValue.toString().split(",");
+                if (values.length != 2) {
                     return null;
                 }
-                Object startValue = convertValue(parts[0], type);
-                Object endValue = convertValue(parts[1], type);
-                if (startValue == null || endValue == null) {
-                    return null;
-                }
-                return criteriaBuilder.between(root.get(property), (Comparable) startValue, (Comparable) endValue);
+                return criteriaBuilder.between(root.get(property), 
+                    (Comparable) convertValue(values[0], type),
+                    (Comparable) convertValue(values[1], type));
             default:
                 return null;
         }
     }
-    
-    /**
-     * Convert string value to the appropriate type
-     * @param value String value
-     * @param type Field type
-     * @return Converted value
-     */
+
     protected Object convertValue(String value, BaseSearchRequest.FieldType type) {
         if (value == null || value.isEmpty()) {
             return null;
@@ -416,40 +407,15 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, DTO> implements 
                         return String.format("%s must be a valid email address. ", column.getHeaderExcel());
                     }
                     break;
-                case PHONE:
-                    if (!(value instanceof String) || !((String) value).matches("^\\+?[0-9]{10,15}$")) {
-                        return String.format("%s must be a valid phone number. ", column.getHeaderExcel());
-                    }
-                    break;
-            }
-            
-            // Then check regex pattern if specified
-            if (value instanceof String && column.getRegex() != null && !column.getRegex().isEmpty()) {
-                String stringValue = (String) value;
-                if (!stringValue.matches(column.getRegex())) {
-                    // Use custom error message if provided, otherwise use default
-                    String errorMessage = column.getRegexErrorMessage();
-                    if (errorMessage == null || errorMessage.isEmpty()) {
-                        errorMessage = String.format("%s does not match the required pattern. ", column.getHeaderExcel());
-                    }
-                    return errorMessage;
-                }
             }
         } catch (Exception e) {
-            log.error("Error validating field type for {}: {}", column.getField(), e.getMessage());
-            return String.format("Invalid format for %s. ", column.getHeaderExcel());
+            log.warn("Error validating field type: {}", e.getMessage());
+            return String.format("Error validating %s: %s", column.getHeaderExcel(), e.getMessage());
         }
         
         return null;
     }
     
-    /**
-     * Validate unique field
-     * @param entity Entity to validate
-     * @param fieldName Field name
-     * @param value Field value
-     * @return Error message if validation fails, null otherwise
-     */
     protected String validateUniqueField(Object entity, String fieldName, Object value) {
         try {
             // Convert field name to method name (e.g., "username" -> "existsByUsername")

@@ -33,7 +33,7 @@ import java.util.Map;
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
-public class UserService extends BaseServiceImpl<User, Long, UserResponse> {
+public class UserService extends BaseServiceImpl<User, Long> {
     
     UserRepository userRepository;
     RoleRepository roleRepository;
