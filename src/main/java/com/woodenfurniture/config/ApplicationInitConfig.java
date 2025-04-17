@@ -30,34 +30,34 @@ public class ApplicationInitConfig {
     RoleService roleService;
     UserService userService;
 
-    @Bean
-    ApplicationRunner applicationRunner() {
-        return args -> {
-            // Check if sample data already exists
-            if (isSampleDataExists()) {
-                log.info("Sample data already exists. Skipping initialization.");
-                return;
-            }
-
-            // Create permissions
-            createPermissions();
-            
-            // Create roles and wait for them to be saved
-            createRoles();
-            
-            // Add a small delay to ensure roles are saved
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            
-            // Create users
-            createUsers();
-            
-            log.info("Sample data has been created successfully");
-        };
-    }
+//    @Bean
+//    ApplicationRunner applicationRunner() {
+//        return args -> {
+//            // Check if sample data already exists
+//            if (isSampleDataExists()) {
+//                log.info("Sample data already exists. Skipping initialization.");
+//                return;
+//            }
+//
+//            // Create permissions
+//            createPermissions();
+//
+//            // Create roles and wait for them to be saved
+//            createRoles();
+//
+//            // Add a small delay to ensure roles are saved
+//            try {
+//                Thread.sleep(5000);
+//            } catch (InterruptedException e) {
+//                Thread.currentThread().interrupt();
+//            }
+//
+//            // Create users
+//            createUsers();
+//
+//            log.info("Sample data has been created successfully");
+//        };
+//    }
 
     private boolean isSampleDataExists() {
         // Check if any of the sample users exist

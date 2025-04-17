@@ -52,7 +52,8 @@ public class SecurityConfiguration {
 //                            .requestMatchers(HttpMethod.GET, "/users").hasAuthority("ROLE_ADMIN")
                             .requestMatchers(HttpMethod.GET, "/users").hasRole(Role.ADMIN.name())
                             .requestMatchers("/**").hasRole(Role.ADMIN.name())
-                            .anyRequest().authenticated();
+                            .anyRequest().permitAll();
+//                            .anyRequest().authenticated();
                 });
         http.oauth2ResourceServer(oauth2 ->
                 oauth2.jwt(jwtConfigurer ->

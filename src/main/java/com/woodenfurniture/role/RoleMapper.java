@@ -4,8 +4,10 @@ import com.woodenfurniture.base.BaseMapper;
 import com.woodenfurniture.permission.Permission;
 import com.woodenfurniture.permission.PermissionResponse;
 import org.mapstruct.BeanMapping;
+import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingInheritanceStrategy;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
@@ -13,15 +15,18 @@ import org.mapstruct.factory.Mappers;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring",
+        mappingInheritanceStrategy = MappingInheritanceStrategy.AUTO_INHERIT_ALL_FROM_CONFIG)
 public interface RoleMapper extends BaseMapper<Role, RoleResponse> {
 
     RoleMapper INSTANCE = Mappers.getMapper(RoleMapper.class);
 
     @Override
+//    @Mapping(target = "id", source = "id")
     @Mapping(target = "name", source = "name")
     @Mapping(target = "description", source = "description")
     @Mapping(target = "permissions", source = "permissions", qualifiedByName = "toPermissionResponses")
+//    @InheritConfiguration(name = "baseMapper")
     RoleResponse toDto(Role role);
 
     @Override
