@@ -13,6 +13,8 @@ import com.woodenfurniture.user.User;
 import com.woodenfurniture.user.UserRepository;
 import com.woodenfurniture.user.UserRequest;
 import com.woodenfurniture.user.UserService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Configuration
@@ -88,14 +92,39 @@ public class ApplicationInitConfig {
         };
     }
 
+    // Inject EntityManager directly
+    @PersistenceContext
+    private EntityManager entityManager;
+    
     @Transactional
     private void clearAllData() {
         log.info("Clearing all existing data...");
-        // Delete in correct order to handle foreign key relationships
-        userRepository.deleteAll();
-        roleRepository.deleteAll();
-        permissionRepository.deleteAll();
-        log.info("All existing data cleared.");
+        try {
+            // 1. First, delete from the mapping tables (join tables for many-to-many)
+            entityManager.createNativeQuery("DELETE FROM user_roles").executeUpdate();
+            log.info("Cleared user-role mappings");
+            
+            entityManager.createNativeQuery("DELETE FROM role_permissions").executeUpdate();
+            log.info("Cleared role-permission mappings");
+            
+            // 2. Now delete from the entity tables in the correct order
+            entityManager.createNativeQuery("DELETE FROM user").executeUpdate();
+            log.info("Deleted all users");
+            
+            entityManager.createNativeQuery("DELETE FROM role").executeUpdate();
+            log.info("Deleted all roles");
+            
+            entityManager.createNativeQuery("DELETE FROM permission").executeUpdate();
+            log.info("Deleted all permissions");
+            
+            // Flush to ensure all changes are committed
+            entityManager.flush();
+            
+            log.info("All existing data cleared successfully");
+        } catch (Exception e) {
+            log.error("Error clearing data", e);
+            throw e;
+        }
     }
 
     private void createPermissions() {

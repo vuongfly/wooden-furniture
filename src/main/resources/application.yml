@@ -52,4 +52,4 @@ jwt:
 # Application specific configuration
 app:
   init:
-    create-sample-data: true # Set to false to disable sample data creation
+    create-sample-data: false # Set to false to disable sample data creation
