@@ -48,3 +48,8 @@ jwt:
   signerKey: "IyD9WlA+4nR75TnKnkcmkivqWlrkQ2RfwESxiOlz5TeEjNciZz+dP2/5sNA5DbBw"
   valid-duration: 86400 # 1 day
   refresh-duration: 172800 # 2 days
+
+# Application specific configuration
+app:
+  init:
+    create-sample-data: true # Set to false to disable sample data creation

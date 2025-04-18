@@ -2,46 +2,47 @@ package com.woodenfurniture.config;
 
 import com.woodenfurniture.enums.Gender;
 import com.woodenfurniture.permission.Permission;
+import com.woodenfurniture.permission.PermissionMapper;
 import com.woodenfurniture.permission.PermissionRepository;
 import com.woodenfurniture.permission.PermissionRequest;
 import com.woodenfurniture.permission.PermissionService;
 import com.woodenfurniture.role.Role;
 import com.woodenfurniture.role.RoleRepository;
-import com.woodenfurniture.role.RoleRequest;
 import com.woodenfurniture.role.RoleService;
 import com.woodenfurniture.user.User;
 import com.woodenfurniture.user.UserRepository;
 import com.woodenfurniture.user.UserRequest;
-import com.woodenfurniture.user.UserResponse;
 import com.woodenfurniture.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 @Configuration
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public class ApplicationInitConfig {
 
-    PermissionService permissionService;
-    RoleService roleService;
-    UserService userService;
-    UserRepository userRepository;
-    RoleRepository roleRepository;
-    PermissionRepository permissionRepository;
-    com.woodenfurniture.permission.PermissionMapper permissionMapper;
+    final PermissionService permissionService;
+    final RoleService roleService;
+    final UserService userService;
+    final UserRepository userRepository;
+    final RoleRepository roleRepository;
+    final PermissionRepository permissionRepository;
+    final PermissionMapper permissionMapper;
+
+    @Value("${app.init.create-sample-data:false}")
+    boolean createSampleData;
 
     @Bean
     public ApplicationRunner applicationRunner() {
@@ -49,30 +50,40 @@ public class ApplicationInitConfig {
             @Override
             @Transactional
             public void run(ApplicationArguments args) throws Exception {
-                log.info("Starting application initialization...");
+                if (!createSampleData) {
+                    log.info("Sample data creation is disabled. Skipping initialization.");
+                    return;
+                }
                 
-                // Clear all existing data
-                clearAllData();
+                log.info("Starting application initialization with sample data...");
                 
-                log.info("Creating sample data...");
-
-                // Create permissions
-                createPermissions();
-                log.info("Permissions created successfully");
-
-                // Create roles with permissions
-                createRoles();
-                log.info("Roles created successfully");
-
-                // Create users without roles
-                createUsers();
-                log.info("Users created successfully");
-                
-                // Add roles to users
-                assignRolesToUsers();
-                log.info("Roles assigned to users successfully");
-
-                log.info("Sample data has been created successfully");
+                try {
+                    // Clear all existing data
+                    clearAllData();
+                    
+                    log.info("Creating sample data...");
+    
+                    // Create permissions
+                    createPermissions();
+                    log.info("Permissions created successfully");
+    
+                    // Create roles with permissions
+                    createRoles();
+                    log.info("Roles created successfully");
+    
+                    // Create users without roles
+                    createUsers();
+                    log.info("Users created successfully");
+                    
+                    // Add roles to users
+                    assignRolesToUsers();
+                    log.info("Roles assigned to users successfully");
+    
+                    log.info("Sample data has been created successfully");
+                } catch (Exception e) {
+                    log.error("Error initializing sample data", e);
+                    throw e;
+                }
             }
         };
     }
