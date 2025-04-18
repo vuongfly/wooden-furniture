@@ -1,31 +1,24 @@
 package com.woodenfurniture.config;
 
 import com.woodenfurniture.enums.Gender;
-import com.woodenfurniture.permission.Permission;
 import com.woodenfurniture.permission.PermissionRepository;
 import com.woodenfurniture.permission.PermissionRequest;
 import com.woodenfurniture.permission.PermissionService;
-import com.woodenfurniture.role.Role;
 import com.woodenfurniture.role.RoleRepository;
 import com.woodenfurniture.role.RoleRequest;
 import com.woodenfurniture.role.RoleService;
 import com.woodenfurniture.user.User;
 import com.woodenfurniture.user.UserRepository;
 import com.woodenfurniture.user.UserRequest;
-import com.woodenfurniture.user.UserResponse;
 import com.woodenfurniture.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 

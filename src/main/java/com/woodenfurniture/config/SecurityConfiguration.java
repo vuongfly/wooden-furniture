@@ -1,6 +1,5 @@
 package com.woodenfurniture.config;
 
-import com.woodenfurniture.enums.Role;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
