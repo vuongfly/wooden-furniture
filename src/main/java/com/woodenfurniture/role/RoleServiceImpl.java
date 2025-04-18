@@ -7,7 +7,9 @@ import com.woodenfurniture.exception.AppException;
 import com.woodenfurniture.exception.ErrorCode;
 import com.woodenfurniture.exception.ResourceNotFoundException;
 import com.woodenfurniture.permission.Permission;
+import com.woodenfurniture.permission.PermissionMapper;
 import com.woodenfurniture.permission.PermissionRepository;
+import com.woodenfurniture.permission.PermissionResponse;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -26,20 +28,23 @@ public class RoleServiceImpl extends BaseServiceImpl<Role, Long, RoleRequest, Ro
     RoleMapper roleMapper;
     ExcelService excelService;
     SimpleExcelConfigReader excelConfigReader;
-    private final PermissionRepository permissionRepository;
+    PermissionRepository permissionRepository;
+    PermissionMapper permissionMapper;
 
     public RoleServiceImpl(
             RoleRepository roleRepository,
             RoleMapper roleMapper,
             ExcelService excelService,
             SimpleExcelConfigReader excelConfigReader,
-            PermissionRepository permissionRepository) {
+            PermissionRepository permissionRepository,
+            PermissionMapper permissionMapper) {
         super(roleRepository, Role.class, excelService, roleMapper, excelConfigReader);
         this.roleRepository = roleRepository;
         this.roleMapper = roleMapper;
         this.excelService = excelService;
         this.excelConfigReader = excelConfigReader;
         this.permissionRepository = permissionRepository;
+        this.permissionMapper = permissionMapper;
     }
 
     @Override
@@ -101,5 +106,14 @@ public class RoleServiceImpl extends BaseServiceImpl<Role, Long, RoleRequest, Ro
 
         return roleMapper.toDto(roleRepository.save(updatedRole));
     }
-
-} 
+    
+    @Override
+    public Set<PermissionResponse> getPermissionsByRoleId(Long id) {
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + id));
+                
+        return role.getPermissions().stream()
+                .map(permissionMapper::toDto)
+                .collect(Collectors.toSet());
+    }
+}

@@ -1,7 +1,9 @@
 package com.woodenfurniture.user;
 
 import com.woodenfurniture.base.BaseMapper;
+import com.woodenfurniture.config.MapstructConfig;
 import com.woodenfurniture.role.Role;
+import com.woodenfurniture.role.RoleMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -12,7 +14,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = "spring",
+    config = MapstructConfig.class,
+    uses = {RoleMapper.class}
+)
 public interface UserMapper extends BaseMapper<User, UserResponse> {
 
     UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
@@ -21,6 +27,7 @@ public interface UserMapper extends BaseMapper<User, UserResponse> {
     @Mapping(target = "username", source = "username")
     @Mapping(target = "email", source = "email")
     @Mapping(target = "fullName", source = "name")
+    @Mapping(target = "roles", ignore = true)
     UserResponse toDto(User entity);
 
     @Override
@@ -38,7 +45,7 @@ public interface UserMapper extends BaseMapper<User, UserResponse> {
     @Mapping(target = "gender", source = "gender")
     @Mapping(target = "phoneNumber", source = "phoneNumber")
     @Mapping(target = "dob", source = "dob")
-    @Mapping(target = "roles", source = "roles", qualifiedByName = "toRoles")
+    @Mapping(target = "roles", ignore = true) // We'll set roles manually in the service
     User toUserEntity(UserRequest request);
 
     @Override
@@ -56,14 +63,6 @@ public interface UserMapper extends BaseMapper<User, UserResponse> {
     @Mapping(target = "gender", source = "gender")
     @Mapping(target = "phoneNumber", source = "phoneNumber")
     @Mapping(target = "dob", source = "dob")
-    @Mapping(target = "roles", source = "roles", qualifiedByName = "toRoles")
+    @Mapping(target = "roles", ignore = true) // We'll set roles manually in the service
     void updateUserEntityFromDto(UserRequest request, @MappingTarget User entity);
-
-    @Named("toRoles")
-    default Set<Role> toRoles(List<String> roleNames) {
-        if (roleNames == null) return null;
-        return roleNames.stream()
-                .map(name -> Role.builder().name(name).build())
-                .collect(Collectors.toSet());
-    }
 }

@@ -1,13 +1,11 @@
 package com.woodenfurniture.role;
 
 import com.woodenfurniture.base.BaseMapper;
+import com.woodenfurniture.config.MapstructConfig;
 import com.woodenfurniture.permission.Permission;
-import com.woodenfurniture.permission.PermissionResponse;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.InheritConfiguration;
+import com.woodenfurniture.permission.PermissionMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingInheritanceStrategy;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
@@ -15,18 +13,22 @@ import org.mapstruct.factory.Mappers;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring",
-        mappingInheritanceStrategy = MappingInheritanceStrategy.AUTO_INHERIT_ALL_FROM_CONFIG)
+@Mapper(
+    componentModel = "spring",
+    config = MapstructConfig.class,
+    uses = {PermissionMapper.class}
+)
 public interface RoleMapper extends BaseMapper<Role, RoleResponse> {
 
     RoleMapper INSTANCE = Mappers.getMapper(RoleMapper.class);
 
+    /**
+     * Maps a Role entity to a RoleResponse DTO, ignoring permissions by default
+     */
     @Override
-//    @Mapping(target = "id", source = "id")
     @Mapping(target = "name", source = "name")
     @Mapping(target = "description", source = "description")
-    @Mapping(target = "permissions", source = "permissions", qualifiedByName = "toPermissionResponses")
-//    @InheritConfiguration(name = "baseMapper")
+    @Mapping(target = "permissions", ignore = true)
     RoleResponse toDto(Role role);
 
     @Override
@@ -62,15 +64,4 @@ public interface RoleMapper extends BaseMapper<Role, RoleResponse> {
                 .map(name -> Permission.builder().name(name).build())
                 .collect(Collectors.toSet());
     }
-
-    @Named("toPermissionResponses")
-    default Set<PermissionResponse> toPermissionResponses(Set<Permission> permissions) {
-        if (permissions == null) return null;
-        return permissions.stream()
-                .map(permission -> PermissionResponse.builder()
-                        .name(permission.getName())
-                        .description(permission.getDescription())
-                        .build())
-                .collect(Collectors.toSet());
-    }
-} 
+}

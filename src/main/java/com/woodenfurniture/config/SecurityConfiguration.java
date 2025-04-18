@@ -48,19 +48,24 @@ public class SecurityConfiguration {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> {
-                    request.requestMatchers(WHITE_LIST_URL).permitAll()
-//                            .requestMatchers(HttpMethod.GET, "/users").hasAuthority("ROLE_ADMIN")
-                            .requestMatchers(HttpMethod.GET, "/users").hasRole(Role.ADMIN.name())
-                            .requestMatchers("/**").hasRole(Role.ADMIN.name())
-                            .anyRequest().permitAll();
-//                            .anyRequest().authenticated();
+                    // TEMPORARILY PERMIT ALL REQUESTS FOR TESTING
+                    request.anyRequest().permitAll();
+                    
+                    // ORIGINAL SECURITY CONFIGURATION (COMMENTED OUT FOR TESTING)
+                    // request.requestMatchers(WHITE_LIST_URL).permitAll()
+                    //         .requestMatchers(HttpMethod.GET, "/users").hasRole(Role.ADMIN.name())
+                    //         .requestMatchers("/**").hasRole(Role.ADMIN.name())
+                    //         .anyRequest().permitAll();
                 });
-        http.oauth2ResourceServer(oauth2 ->
-                oauth2.jwt(jwtConfigurer ->
-                                jwtConfigurer.decoder(jwtDecoder)
-                                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
-        );
+                
+        // DISABLE JWT AUTHENTICATION TEMPORARILY
+        // http.oauth2ResourceServer(oauth2 ->
+        //         oauth2.jwt(jwtConfigurer ->
+        //                         jwtConfigurer.decoder(jwtDecoder)
+        //                                 .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+        //                 .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
+        // );
+        
         return http.build();
     }
 
@@ -70,7 +75,6 @@ public class SecurityConfiguration {
          * set prefix for authority Scope
          * */
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-//        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
         jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
@@ -81,5 +85,4 @@ public class SecurityConfiguration {
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
     }
-
 }

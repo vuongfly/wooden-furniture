@@ -6,8 +6,13 @@ import com.woodenfurniture.config.excel.SimpleExcelConfig;
 import com.woodenfurniture.config.excel.SimpleExcelConfigReader;
 import com.woodenfurniture.exception.AppException;
 import com.woodenfurniture.exception.ErrorCode;
+import com.woodenfurniture.exception.ResourceNotFoundException;
 import com.woodenfurniture.exception.UserNotFoundException;
+import com.woodenfurniture.role.Role;
+import com.woodenfurniture.role.RoleMapper;
 import com.woodenfurniture.role.RoleRepository;
+import com.woodenfurniture.role.RoleResponse;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
@@ -20,6 +25,8 @@ import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -29,17 +36,20 @@ public class UserServiceImpl extends BaseServiceImpl<User, Long, UserRequest, Us
     UserRepository userRepository;
     RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
+    RoleMapper roleMapper;
 
     public UserServiceImpl(UserRepository userRepository,
                            RoleRepository roleRepository,
                            UserMapper userMapper,
                            PasswordEncoder passwordEncoder,
                            ExcelService excelService,
-                           SimpleExcelConfigReader excelConfigReader) {
+                           SimpleExcelConfigReader excelConfigReader,
+                           RoleMapper roleMapper) {
         super(userRepository, User.class, excelService, userMapper, excelConfigReader);
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.roleMapper = roleMapper;
     }
 
     @Override
@@ -67,6 +77,17 @@ public class UserServiceImpl extends BaseServiceImpl<User, Long, UserRequest, Us
     }
 
     @Override
+    public Set<RoleResponse> getRolesByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED));
+        
+        return user.getRoles().stream()
+                .map(roleMapper::toDto)
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    @Transactional
     public UserResponse create(UserRequest request) {
         // Check if username or email already exists
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -76,17 +97,11 @@ public class UserServiceImpl extends BaseServiceImpl<User, Long, UserRequest, Us
             throw new AppException(ErrorCode.EMAIL_EXISTED);
         }
 
-        // Create user entity
+        // Create user entity without roles
         User user = mapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-
-        // Set default role if not specified
-        if (user.getRoles() == null || user.getRoles().isEmpty()) {
-            var defaultRole = roleRepository.findByName("USER")
-                    .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
-            user.setRoles(new HashSet<>(List.of(defaultRole)));
-        }
-
+        user.setRoles(new HashSet<>()); // Initialize with empty roles set
+        
         // Save user
         user = userRepository.save(user);
 
@@ -95,6 +110,7 @@ public class UserServiceImpl extends BaseServiceImpl<User, Long, UserRequest, Us
     }
 
     @Override
+    @Transactional
     public UserResponse update(Long id, UserRequest request) {
         // Find existing user
         User user = userRepository.findById(id)
@@ -110,16 +126,70 @@ public class UserServiceImpl extends BaseServiceImpl<User, Long, UserRequest, Us
             throw new AppException(ErrorCode.EMAIL_EXISTED);
         }
 
-        // Update user
+        // Update user basic fields
         mapper.updateEntityFromDto(request, user);
         if (request.getPassword() != null) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
-
-        // Save user
+        
+        // Save user - don't modify roles here
         user = userRepository.save(user);
 
         // Create and return response
+        return mapper.toDto(user);
+    }
+    
+    @Override
+    @Transactional
+    public UserResponse addRolesToUser(Long userId, List<String> roleNames) {
+        // Find user
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        
+        // Initialize roles set if null
+        if (user.getRoles() == null) {
+            user.setRoles(new HashSet<>());
+        }
+        
+        // Add roles
+        for (String roleName : roleNames) {
+            Role role = roleRepository.findByName(roleName)
+                    .orElseThrow(() -> new ResourceNotFoundException("Role not found with name: " + roleName));
+            user.getRoles().add(role);
+        }
+        
+        // Save user
+        user = userRepository.save(user);
+        
+        // Return response
+        return mapper.toDto(user);
+    }
+    
+    @Override
+    @Transactional
+    public UserResponse removeRolesFromUser(Long userId, List<String> roleNames) {
+        // Find user
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        
+        // If user has no roles or null roles, return as is
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            return mapper.toDto(user);
+        }
+        
+        // Remove roles
+        Set<Role> rolesToRemove = new HashSet<>();
+        for (String roleName : roleNames) {
+            roleRepository.findByName(roleName).ifPresent(rolesToRemove::add);
+        }
+        
+        // Remove all found roles
+        user.getRoles().removeAll(rolesToRemove);
+        
+        // Save user
+        user = userRepository.save(user);
+        
+        // Return response
         return mapper.toDto(user);
     }
 
@@ -132,4 +202,4 @@ public class UserServiceImpl extends BaseServiceImpl<User, Long, UserRequest, Us
         // Add any user-specific validation here if needed
         return validationErrors;
     }
-} 
+}

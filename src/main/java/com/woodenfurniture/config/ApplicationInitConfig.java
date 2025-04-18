@@ -1,16 +1,25 @@
 package com.woodenfurniture.config;
 
 import com.woodenfurniture.enums.Gender;
+import com.woodenfurniture.permission.Permission;
+import com.woodenfurniture.permission.PermissionRepository;
 import com.woodenfurniture.permission.PermissionRequest;
 import com.woodenfurniture.permission.PermissionService;
+import com.woodenfurniture.role.Role;
+import com.woodenfurniture.role.RoleRepository;
 import com.woodenfurniture.role.RoleRequest;
 import com.woodenfurniture.role.RoleService;
+import com.woodenfurniture.user.User;
+import com.woodenfurniture.user.UserRepository;
 import com.woodenfurniture.user.UserRequest;
+import com.woodenfurniture.user.UserResponse;
 import com.woodenfurniture.user.UserService;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,58 +38,57 @@ public class ApplicationInitConfig {
     PermissionService permissionService;
     RoleService roleService;
     UserService userService;
+    UserRepository userRepository;
+    RoleRepository roleRepository;
+    PermissionRepository permissionRepository;
 
 //    @Bean
-//    ApplicationRunner applicationRunner() {
-//        return args -> {
-//            // Check if sample data already exists
-//            if (isSampleDataExists()) {
-//                log.info("Sample data already exists. Skipping initialization.");
-//                return;
+//    public ApplicationRunner applicationRunner() {
+//        return new ApplicationRunner() {
+//            @Override
+//            @Transactional
+//            public void run(ApplicationArguments args) throws Exception {
+//                log.info("Starting application initialization...");
+//
+//                // Clear all existing data
+//                clearAllData();
+//
+//                log.info("Creating sample data...");
+//
+//                // Create permissions
+//                createPermissions();
+//                log.info("Permissions created successfully");
+//
+//                // Create roles with permissions
+//                createRoles();
+//                log.info("Roles created successfully");
+//
+//                // Create users without roles
+//                createUsers();
+//                log.info("Users created successfully");
+//
+//                // Add roles to users
+//                assignRolesToUsers();
+//                log.info("Roles assigned to users successfully");
+//
+//                log.info("Sample data has been created successfully");
 //            }
-//
-//            // Create permissions
-//            createPermissions();
-//
-//            // Create roles and wait for them to be saved
-//            createRoles();
-//
-//            // Add a small delay to ensure roles are saved
-//            try {
-//                Thread.sleep(5000);
-//            } catch (InterruptedException e) {
-//                Thread.currentThread().interrupt();
-//            }
-//
-//            // Create users
-//            createUsers();
-//
-//            log.info("Sample data has been created successfully");
 //        };
 //    }
 
-    private boolean isSampleDataExists() {
-        // Check if any of the sample users exist
-        boolean adminExists = userService.existsByUsername("admin");
-        boolean managerExists = userService.existsByUsername("manager");
-        boolean userExists = userService.existsByUsername("user");
-
-        // Check if any of the sample roles exist
-        boolean adminRoleExists = roleService.existsByName("ADMIN");
-        boolean managerRoleExists = roleService.existsByName("MANAGER");
-        boolean userRoleExists = roleService.existsByName("USER");
-
-        // Check if any of the sample permissions exist
-        boolean userReadExists = permissionService.existsByName("Read User");
-        boolean roleReadExists = permissionService.existsByName("Read Role");
-        boolean permissionReadExists = permissionService.existsByName("Read Permission");
-
-        return adminExists || managerExists || userExists ||
-               adminRoleExists || managerRoleExists || userRoleExists ||
-               userReadExists || roleReadExists || permissionReadExists;
+    @Transactional
+    private void clearAllData() {
+        log.info("Clearing all existing data...");
+        // Delete in correct order to handle foreign key relationships
+        userRepository.deleteAll();
+        roleRepository.deleteAll();
+        permissionRepository.deleteAll();
+        log.info("All existing data cleared.");
     }
 
     private void createPermissions() {
+        log.info("Creating permissions...");
+        
         // User permissions
         createPermission("USER_READ", "Read User", "Permission to view user information");
         createPermission("USER_CREATE", "Create User", "Permission to create new users");
@@ -98,65 +106,94 @@ public class ApplicationInitConfig {
         createPermission("PERMISSION_CREATE", "Create Permission", "Permission to create new permissions");
         createPermission("PERMISSION_UPDATE", "Update Permission", "Permission to update permission information");
         createPermission("PERMISSION_DELETE", "Delete Permission", "Permission to delete permissions");
+        
+        // Product management permissions
+        createPermission("PRODUCT_READ", "Read Product", "Permission to view product information");
+        createPermission("PRODUCT_CREATE", "Create Product", "Permission to create new products");
+        createPermission("PRODUCT_UPDATE", "Update Product", "Permission to update product information");
+        createPermission("PRODUCT_DELETE", "Delete Product", "Permission to delete products");
+        
+        // Order management permissions
+        createPermission("ORDER_READ", "Read Order", "Permission to view order information");
+        createPermission("ORDER_CREATE", "Create Order", "Permission to create new orders");
+        createPermission("ORDER_UPDATE", "Update Order", "Permission to update order information");
+        createPermission("ORDER_DELETE", "Delete Order", "Permission to delete orders");
     }
 
     private void createPermission(String code, String name, String description) {
-        if (!permissionService.existsByName(name)) {
-            PermissionRequest request = new PermissionRequest();
-            request.setName(name);
-            request.setDescription(description);
-            permissionService.create(request);
-            log.info("Created permission: {}", name);
-        }
+        PermissionRequest request = new PermissionRequest();
+        request.setName(name);
+        request.setDescription(description);
+        permissionService.create(request);
+        log.debug("Created permission: {}", name);
     }
 
     private void createRoles() {
+        log.info("Creating roles...");
+        
         // Create Admin role with all permissions
-        createRole("ADMIN", "ADMIN", "Full system access", Set.of(
-                "USER_READ", "USER_CREATE", "USER_UPDATE", "USER_DELETE",
-                "ROLE_READ", "ROLE_CREATE", "ROLE_UPDATE", "ROLE_DELETE",
-                "PERMISSION_READ", "PERMISSION_CREATE", "PERMISSION_UPDATE", "PERMISSION_DELETE"
+        createRole("ADMIN", "Administrator", "Full system access", Set.of(
+                "Read User", "Create User", "Update User", "Delete User",
+                "Read Role", "Create Role", "Update Role", "Delete Role",
+                "Read Permission", "Create Permission", "Update Permission", "Delete Permission",
+                "Read Product", "Create Product", "Update Product", "Delete Product",
+                "Read Order", "Create Order", "Update Order", "Delete Order"
         ));
 
-        // Create Manager role with user and role read permissions
-        createRole("MANAGER", "MANAGER", "Manager level access", Set.of(
-                "USER_READ", "USER_CREATE", "USER_UPDATE",
-                "ROLE_READ", "PERMISSION_READ"
+        // Create Manager role with limited permissions
+        createRole("MANAGER", "Manager", "Manager level access", Set.of(
+                "Read User", "Create User", "Update User",
+                "Read Role", "Read Permission",
+                "Read Product", "Create Product", "Update Product",
+                "Read Order", "Create Order", "Update Order"
+        ));
+
+        // Create Sales role
+        createRole("SALES", "Sales Representative", "Sales access", Set.of(
+                "Read User",
+                "Read Product",
+                "Read Order", "Create Order", "Update Order"
         ));
 
         // Create User role with basic permissions
-        createRole("USER", "USER", "Basic user access", Set.of(
-                "USER_READ", "ROLE_READ", "PERMISSION_READ"
+        createRole("USER", "Regular User", "Basic user access", Set.of(
+                "Read User",
+                "Read Product",
+                "Read Order", "Create Order"
         ));
     }
 
     private void createRole(String code, String name, String description, Set<String> permissionNames) {
-        if (!roleService.existsByName(name)) {
-            RoleRequest request = new RoleRequest();
-            request.setName(name);
-            request.setDescription(description);
-            request.setPermissionNames(permissionNames);
-            roleService.create(request);
-            log.info("Created role: {}", name);
-        }
+        RoleRequest request = new RoleRequest();
+        request.setName(name);
+        request.setDescription(description);
+        request.setPermissionNames(permissionNames);
+        roleService.create(request);
+        log.debug("Created role: {}", name);
     }
 
     private void createUsers() {
-        // Create admin user
-        createUser("admin", "admin@woodenfurniture.com", "Password123!", "System Administrator", 
-                30, Gender.MALE, "+1234567890", LocalDate.of(1993, 1, 1), Set.of("ADMIN"));
+        log.info("Creating users...");
+        
+        // Create users without roles
+        createUser("admin", "admin@woodenfurniture.com", "Admin123!", "System Administrator", 
+                30, Gender.MALE, "+1234567890", LocalDate.of(1993, 1, 1));
 
-        // Create manager user
-        createUser("manager", "manager@woodenfurniture.com", "Password123!", "Manager User",
-                35, Gender.MALE, "+1234567891", LocalDate.of(1988, 1, 1), Set.of("MANAGER"));
+        createUser("manager", "manager@woodenfurniture.com", "Manager123!", "Store Manager",
+                35, Gender.FEMALE, "+1234567891", LocalDate.of(1988, 1, 1));
+                
+        createUser("sales", "sales@woodenfurniture.com", "Sales123!", "Sales Person",
+                28, Gender.MALE, "+1234567892", LocalDate.of(1995, 5, 15));
 
-        // Create regular user
-        createUser("user", "user@woodenfurniture.com", "Password123!", "Regular User",
-                25, Gender.FEMALE, "+1234567892", LocalDate.of(1998, 1, 1), Set.of("USER"));
+        createUser("user", "user@woodenfurniture.com", "User123!", "Regular User",
+                25, Gender.FEMALE, "+1234567893", LocalDate.of(1998, 1, 1));
+                
+        createUser("johndoe", "john.doe@woodenfurniture.com", "John123!", "John Doe",
+                40, Gender.MALE, "+1234567894", LocalDate.of(1983, 7, 20));
     }
 
     private void createUser(String username, String email, String password, String name,
-                          Integer age, Gender gender, String phoneNumber, LocalDate dob, Set<String> roles) {
+                          Integer age, Gender gender, String phoneNumber, LocalDate dob) {
         UserRequest request = new UserRequest();
         request.setUsername(username);
         request.setEmail(email);
@@ -166,8 +203,36 @@ public class ApplicationInitConfig {
         request.setGender(gender);
         request.setPhoneNumber(phoneNumber);
         request.setDob(dob);
-        request.setRoles(new ArrayList<>(roles));
         userService.create(request);
-        log.info("Created user: {}", username);
+        log.debug("Created user: {}", username);
+    }
+    
+    private void assignRolesToUsers() {
+        log.info("Assigning roles to users...");
+        
+        // Find users by username
+        User adminUser = userRepository.findByUsername("admin")
+                .orElseThrow(() -> new RuntimeException("Admin user not found"));
+        
+        User managerUser = userRepository.findByUsername("manager")
+                .orElseThrow(() -> new RuntimeException("Manager user not found"));
+        
+        User salesUser = userRepository.findByUsername("sales")
+                .orElseThrow(() -> new RuntimeException("Sales user not found"));
+        
+        User regularUser = userRepository.findByUsername("user")
+                .orElseThrow(() -> new RuntimeException("Regular user not found"));
+        
+        User johnDoe = userRepository.findByUsername("johndoe")
+                .orElseThrow(() -> new RuntimeException("John Doe user not found"));
+        
+        // Assign roles
+        userService.addRolesToUser(adminUser.getId(), List.of("Administrator"));
+        userService.addRolesToUser(managerUser.getId(), List.of("Manager"));
+        userService.addRolesToUser(salesUser.getId(), List.of("Sales Representative"));
+        userService.addRolesToUser(regularUser.getId(), List.of("Regular User"));
+        userService.addRolesToUser(johnDoe.getId(), List.of("Manager", "Sales Representative"));
+        
+        log.info("Roles assigned successfully");
     }
 }
