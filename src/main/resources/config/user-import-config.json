@@ -21,6 +21,14 @@
       "regexErrorMessage": "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character."
     },
     {
+      "headerExcel": "Name",
+      "field": "name",
+      "required": true,
+      "type": "STRING",
+      "regex": "^[a-zA-Z\\s-']{2,100}$",
+      "regexErrorMessage": "Name must be 2-100 characters long and contain only letters, spaces, hyphens, and apostrophes."
+    },
+    {
       "headerExcel": "Email",
       "field": "email",
       "required": true,
@@ -28,32 +36,30 @@
       "type": "EMAIL"
     },
     {
-      "headerExcel": "First Name",
-      "field": "firstName",
-      "required": true,
-      "type": "STRING",
-      "regex": "^[a-zA-Z\\s-']{2,50}$",
-      "regexErrorMessage": "First name must be 2-50 characters long and contain only letters, spaces, hyphens, and apostrophes."
-    },
-    {
-      "headerExcel": "Last Name",
-      "field": "lastName",
-      "required": true,
-      "type": "STRING",
-      "regex": "^[a-zA-Z\\s-']{2,50}$",
-      "regexErrorMessage": "Last name must be 2-50 characters long and contain only letters, spaces, hyphens, and apostrophes."
-    },
-    {
       "headerExcel": "Phone Number",
-      "field": "phone",
+      "field": "phoneNumber",
       "type": "PHONE"
     },
     {
-      "headerExcel": "Address",
-      "field": "address",
+      "headerExcel": "Gender",
+      "field": "gender",
+      "required": false,
       "type": "STRING",
-      "regex": "^[a-zA-Z0-9\\s,.-]{5,100}$",
-      "regexErrorMessage": "Address must be 5-100 characters long and contain only letters, numbers, spaces, commas, periods, and hyphens."
+      "regex": "^(MALE|FEMALE|OTHER)$",
+      "regexErrorMessage": "Gender must be one of: MALE, FEMALE, OTHER"
+    },
+    {
+      "headerExcel": "Age",
+      "field": "age",
+      "required": false,
+      "type": "NUMBER"
+    },
+    {
+      "headerExcel": "Date of Birth",
+      "field": "dob",
+      "required": false,
+      "type": "DATE",
+      "format": "yyyy-MM-dd"
     },
     {
       "headerExcel": "Roles",
@@ -61,6 +67,13 @@
       "required": true,
       "multiple": true,
       "type": "STRING"
+    },
+    {
+      "headerExcel": "Code",
+      "field": "code",
+      "required": false,
+      "unique": true,
+      "type": "STRING"
     }
   ]
-} 
+}

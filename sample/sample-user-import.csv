@@ -1,0 +1,4 @@
+Username,Password,Name,Email,Phone Number,Gender,Age,Date of Birth,Roles,Code
+johndoe,P@ssw0rd123,John Doe,john.doe@example.com,+1234567890,MALE,30,1994-05-15,ADMIN;USER,USER_001
+janesmith,J@neSmith456,Jane Smith,jane.smith@example.com,+0987654321,FEMALE,28,1996-08-22,USER,USER_002
+markwilson,M@rkWilson789,Mark Wilson,mark.wilson@example.com,+1122334455,MALE,35,1989-11-10,MANAGER;USER,USER_003

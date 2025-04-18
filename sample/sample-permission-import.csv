@@ -1,0 +1,14 @@
+Permission Name,Description,Code
+CREATE_USER,Create a new user,PERM_CREATE_USER
+READ_USER,View user details,PERM_READ_USER
+UPDATE_USER,Update any user details,PERM_UPDATE_USER
+DELETE_USER,Delete a user,PERM_DELETE_USER
+UPDATE_OWN_USER,Update own user details,PERM_UPDATE_OWN_USER
+CREATE_ROLE,Create a new role,PERM_CREATE_ROLE
+READ_ROLE,View role details,PERM_READ_ROLE
+UPDATE_ROLE,Update role details,PERM_UPDATE_ROLE
+DELETE_ROLE,Delete a role,PERM_DELETE_ROLE
+CREATE_PRODUCT,Create a new product,PERM_CREATE_PRODUCT
+READ_PRODUCT,View product details,PERM_READ_PRODUCT
+UPDATE_PRODUCT,Update product details,PERM_UPDATE_PRODUCT
+DELETE_PRODUCT,Delete a product,PERM_DELETE_PRODUCT

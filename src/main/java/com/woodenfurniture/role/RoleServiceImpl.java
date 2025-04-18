@@ -49,7 +49,7 @@ public class RoleServiceImpl extends BaseServiceImpl<Role, Long, RoleRequest, Ro
 
     @Override
     protected String getImportConfigPath() {
-        return "config/excel/role-import-config.json";
+        return "config/role-import-config.json";
     }
 
     @Override

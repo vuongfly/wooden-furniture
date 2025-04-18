@@ -1,0 +1,40 @@
+{
+  "name": "Roles",
+  "rowIndex": 1,
+  "columnIndex": 0,
+  "column": [
+    {
+      "headerExcel": "Role Name",
+      "field": "name",
+      "required": true,
+      "unique": true,
+      "type": "STRING",
+      "regex": "^[A-Z_]{3,50}$",
+      "regexErrorMessage": "Role name must be 3-50 characters long, uppercase, and contain only letters and underscores."
+    },
+    {
+      "headerExcel": "Description",
+      "field": "description",
+      "required": true,
+      "type": "STRING",
+      "regex": "^[\\w\\s.,;:!?()-]{5,255}$",
+      "regexErrorMessage": "Description must be 5-255 characters long and contain only letters, numbers, and basic punctuation."
+    },
+    {
+      "headerExcel": "Permissions",
+      "field": "permissions",
+      "required": true,
+      "multiple": true,
+      "type": "STRING"
+    },
+    {
+      "headerExcel": "Code",
+      "field": "code",
+      "required": false,
+      "unique": true,
+      "type": "STRING",
+      "regex": "^[A-Z0-9_]{3,20}$",
+      "regexErrorMessage": "Code must be 3-20 characters long, uppercase, and contain only letters, numbers, and underscores."
+    }
+  ]
+}
