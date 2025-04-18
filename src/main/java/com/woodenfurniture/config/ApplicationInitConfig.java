@@ -1,24 +1,31 @@
 package com.woodenfurniture.config;
 
 import com.woodenfurniture.enums.Gender;
+import com.woodenfurniture.permission.Permission;
 import com.woodenfurniture.permission.PermissionRepository;
 import com.woodenfurniture.permission.PermissionRequest;
 import com.woodenfurniture.permission.PermissionService;
+import com.woodenfurniture.role.Role;
 import com.woodenfurniture.role.RoleRepository;
 import com.woodenfurniture.role.RoleRequest;
 import com.woodenfurniture.role.RoleService;
 import com.woodenfurniture.user.User;
 import com.woodenfurniture.user.UserRepository;
 import com.woodenfurniture.user.UserRequest;
+import com.woodenfurniture.user.UserResponse;
 import com.woodenfurniture.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -34,40 +41,41 @@ public class ApplicationInitConfig {
     UserRepository userRepository;
     RoleRepository roleRepository;
     PermissionRepository permissionRepository;
+    com.woodenfurniture.permission.PermissionMapper permissionMapper;
 
-//    @Bean
-//    public ApplicationRunner applicationRunner() {
-//        return new ApplicationRunner() {
-//            @Override
-//            @Transactional
-//            public void run(ApplicationArguments args) throws Exception {
-//                log.info("Starting application initialization...");
-//
-//                // Clear all existing data
-//                clearAllData();
-//
-//                log.info("Creating sample data...");
-//
-//                // Create permissions
-//                createPermissions();
-//                log.info("Permissions created successfully");
-//
-//                // Create roles with permissions
-//                createRoles();
-//                log.info("Roles created successfully");
-//
-//                // Create users without roles
-//                createUsers();
-//                log.info("Users created successfully");
-//
-//                // Add roles to users
-//                assignRolesToUsers();
-//                log.info("Roles assigned to users successfully");
-//
-//                log.info("Sample data has been created successfully");
-//            }
-//        };
-//    }
+    @Bean
+    public ApplicationRunner applicationRunner() {
+        return new ApplicationRunner() {
+            @Override
+            @Transactional
+            public void run(ApplicationArguments args) throws Exception {
+                log.info("Starting application initialization...");
+                
+                // Clear all existing data
+                clearAllData();
+                
+                log.info("Creating sample data...");
+
+                // Create permissions
+                createPermissions();
+                log.info("Permissions created successfully");
+
+                // Create roles with permissions
+                createRoles();
+                log.info("Roles created successfully");
+
+                // Create users without roles
+                createUsers();
+                log.info("Users created successfully");
+                
+                // Add roles to users
+                assignRolesToUsers();
+                log.info("Roles assigned to users successfully");
+
+                log.info("Sample data has been created successfully");
+            }
+        };
+    }
 
     @Transactional
     private void clearAllData() {
@@ -114,62 +122,132 @@ public class ApplicationInitConfig {
     }
 
     private void createPermission(String code, String name, String description) {
-        PermissionRequest request = new PermissionRequest();
-        request.setName(name);
-        request.setDescription(description);
-        permissionService.create(request);
-        log.debug("Created permission: {}", name);
+        try {
+            // Create a permission request with all the data
+            PermissionRequest request = new PermissionRequest();
+            request.setName(name);
+            request.setDescription(description);
+            
+            // Create the permission first
+            Permission permission = permissionMapper.toEntity(request);
+            
+            // Set the code using the inherited field from BaseEntity
+            permission.setCode(code);
+            
+            // Save directly using repository
+            permissionRepository.save(permission);
+            log.debug("Created permission: {} with code: {}", name, code);
+        } catch (Exception e) {
+            log.error("Error creating permission with code: {}", code, e);
+            throw e;
+        }
     }
 
     private void createRoles() {
         log.info("Creating roles...");
         
         // Create Admin role with all permissions
-        createRole("ADMIN", "Administrator", "Full system access", Set.of(
-                "Read User", "Create User", "Update User", "Delete User",
-                "Read Role", "Create Role", "Update Role", "Delete Role",
-                "Read Permission", "Create Permission", "Update Permission", "Delete Permission",
-                "Read Product", "Create Product", "Update Product", "Delete Product",
-                "Read Order", "Create Order", "Update Order", "Delete Order"
+        createRole("ADMIN_ROLE", "Administrator", "Full system access", Set.of(
+                "USER_READ", "USER_CREATE", "USER_UPDATE", "USER_DELETE",
+                "ROLE_READ", "ROLE_CREATE", "ROLE_UPDATE", "ROLE_DELETE",
+                "PERMISSION_READ", "PERMISSION_CREATE", "PERMISSION_UPDATE", "PERMISSION_DELETE",
+                "PRODUCT_READ", "PRODUCT_CREATE", "PRODUCT_UPDATE", "PRODUCT_DELETE",
+                "ORDER_READ", "ORDER_CREATE", "ORDER_UPDATE", "ORDER_DELETE"
         ));
 
         // Create Manager role with limited permissions
-        createRole("MANAGER", "Manager", "Manager level access", Set.of(
-                "Read User", "Create User", "Update User",
-                "Read Role", "Read Permission",
-                "Read Product", "Create Product", "Update Product",
-                "Read Order", "Create Order", "Update Order"
+        createRole("MANAGER_ROLE", "Manager", "Manager level access", Set.of(
+                "USER_READ", "USER_CREATE", "USER_UPDATE",
+                "ROLE_READ", "PERMISSION_READ",
+                "PRODUCT_READ", "PRODUCT_CREATE", "PRODUCT_UPDATE",
+                "ORDER_READ", "ORDER_CREATE", "ORDER_UPDATE"
         ));
 
         // Create Sales role
-        createRole("SALES", "Sales Representative", "Sales access", Set.of(
-                "Read User",
-                "Read Product",
-                "Read Order", "Create Order", "Update Order"
+        createRole("SALES_ROLE", "Sales Representative", "Sales access", Set.of(
+                "USER_READ",
+                "PRODUCT_READ",
+                "ORDER_READ", "ORDER_CREATE", "ORDER_UPDATE"
         ));
 
         // Create User role with basic permissions
-        createRole("USER", "Regular User", "Basic user access", Set.of(
-                "Read User",
-                "Read Product",
-                "Read Order", "Create Order"
+        createRole("USER_ROLE", "Regular User", "Basic user access", Set.of(
+                "USER_READ",
+                "PRODUCT_READ",
+                "ORDER_READ", "ORDER_CREATE"
         ));
     }
 
-    private void createRole(String code, String name, String description, Set<String> permissionNames) {
-        RoleRequest request = new RoleRequest();
-        request.setName(name);
-        request.setDescription(description);
-        request.setPermissionNames(permissionNames);
-        roleService.create(request);
-        log.debug("Created role: {}", name);
+    private void createRole(String code, String name, String description, Set<String> permissionCodes) {
+        try {
+            // First create a basic role with name and description
+            Role role = new Role();
+            role.setName(name);
+            role.setDescription(description);
+            
+            // Set the code using the inherited field from BaseEntity
+            role.setCode(code);
+            
+            // First find permissions by their code (now that we're properly setting codes)
+            Set<Permission> permissions = permissionRepository.findAllByCodeIn(permissionCodes);
+            
+            if (permissions.isEmpty()) {
+                // Fallback to finding by name if no permissions found by code
+                Set<String> permissionNames = permissionCodes.stream()
+                    .map(pCode -> {
+                        switch(pCode) {
+                            case "USER_READ": return "Read User";
+                            case "USER_CREATE": return "Create User";
+                            case "USER_UPDATE": return "Update User";
+                            case "USER_DELETE": return "Delete User";
+                            case "ROLE_READ": return "Read Role";
+                            case "ROLE_CREATE": return "Create Role";
+                            case "ROLE_UPDATE": return "Update Role";
+                            case "ROLE_DELETE": return "Delete Role";
+                            case "PERMISSION_READ": return "Read Permission";
+                            case "PERMISSION_CREATE": return "Create Permission";
+                            case "PERMISSION_UPDATE": return "Update Permission";
+                            case "PERMISSION_DELETE": return "Delete Permission";
+                            case "PRODUCT_READ": return "Read Product";
+                            case "PRODUCT_CREATE": return "Create Product";
+                            case "PRODUCT_UPDATE": return "Update Product";
+                            case "PRODUCT_DELETE": return "Delete Product";
+                            case "ORDER_READ": return "Read Order";
+                            case "ORDER_CREATE": return "Create Order";
+                            case "ORDER_UPDATE": return "Update Order";
+                            case "ORDER_DELETE": return "Delete Order";
+                            default: return pCode;
+                        }
+                    })
+                    .collect(java.util.stream.Collectors.toSet());
+                
+                permissions = permissionRepository.findAllByNameIn(permissionNames);
+            }
+            
+            if (permissions.size() != permissionCodes.size()) {
+                log.warn("Not all permissions were found: expected {}, found {}", 
+                        permissionCodes.size(), permissions.size());
+            }
+            
+            // Set the permissions for the role
+            role.setPermissions(permissions);
+            
+            // Save the role with its code and permissions
+            roleRepository.save(role);
+            
+            log.debug("Created role: {} with code: {} and {} permissions", 
+                    name, code, permissions.size());
+        } catch (Exception e) {
+            log.error("Error creating role with code: {}", code, e);
+            throw e;
+        }
     }
 
     private void createUsers() {
         log.info("Creating users...");
         
         // Create users without roles
-        createUser("admin", "admin@woodenfurniture.com", "Admin123!", "System Administrator", 
+        createUser("admin", "admin@woodenfurniture.com", "admin", "System Administrator",
                 30, Gender.MALE, "+1234567890", LocalDate.of(1993, 1, 1));
 
         createUser("manager", "manager@woodenfurniture.com", "Manager123!", "Store Manager",
@@ -191,7 +269,7 @@ public class ApplicationInitConfig {
         request.setUsername(username);
         request.setEmail(email);
         request.setPassword(password);
-        request.setName(name);
+        request.setName(name);  // Using name field as per UserRequest
         request.setAge(age);
         request.setGender(gender);
         request.setPhoneNumber(phoneNumber);
@@ -203,29 +281,77 @@ public class ApplicationInitConfig {
     private void assignRolesToUsers() {
         log.info("Assigning roles to users...");
         
-        // Find users by username
-        User adminUser = userRepository.findByUsername("admin")
-                .orElseThrow(() -> new RuntimeException("Admin user not found"));
-        
-        User managerUser = userRepository.findByUsername("manager")
-                .orElseThrow(() -> new RuntimeException("Manager user not found"));
-        
-        User salesUser = userRepository.findByUsername("sales")
-                .orElseThrow(() -> new RuntimeException("Sales user not found"));
-        
-        User regularUser = userRepository.findByUsername("user")
-                .orElseThrow(() -> new RuntimeException("Regular user not found"));
-        
-        User johnDoe = userRepository.findByUsername("johndoe")
-                .orElseThrow(() -> new RuntimeException("John Doe user not found"));
-        
-        // Assign roles
-        userService.addRolesToUser(adminUser.getId(), List.of("Administrator"));
-        userService.addRolesToUser(managerUser.getId(), List.of("Manager"));
-        userService.addRolesToUser(salesUser.getId(), List.of("Sales Representative"));
-        userService.addRolesToUser(regularUser.getId(), List.of("Regular User"));
-        userService.addRolesToUser(johnDoe.getId(), List.of("Manager", "Sales Representative"));
-        
-        log.info("Roles assigned successfully");
+        try {
+            // Find users by username
+            User adminUser = userRepository.findByUsername("admin")
+                    .orElseThrow(() -> new RuntimeException("Admin user not found"));
+            
+            User managerUser = userRepository.findByUsername("manager")
+                    .orElseThrow(() -> new RuntimeException("Manager user not found"));
+            
+            User salesUser = userRepository.findByUsername("sales")
+                    .orElseThrow(() -> new RuntimeException("Sales user not found"));
+            
+            User regularUser = userRepository.findByUsername("user")
+                    .orElseThrow(() -> new RuntimeException("Regular user not found"));
+            
+            User johnDoe = userRepository.findByUsername("johndoe")
+                    .orElseThrow(() -> new RuntimeException("John Doe user not found"));
+            
+            log.info("All users found successfully");
+            
+            // Try to find roles by code first
+            Role adminRole = roleRepository.findByCode("ADMIN_ROLE")
+                    .orElseGet(() -> roleRepository.findByName("Administrator")
+                            .orElseThrow(() -> new RuntimeException("Admin role not found")));
+            
+            Role managerRole = roleRepository.findByCode("MANAGER_ROLE")
+                    .orElseGet(() -> roleRepository.findByName("Manager")
+                            .orElseThrow(() -> new RuntimeException("Manager role not found")));
+            
+            Role salesRole = roleRepository.findByCode("SALES_ROLE")
+                    .orElseGet(() -> roleRepository.findByName("Sales Representative")
+                            .orElseThrow(() -> new RuntimeException("Sales role not found")));
+            
+            Role userRole = roleRepository.findByCode("USER_ROLE")
+                    .orElseGet(() -> roleRepository.findByName("Regular User")
+                            .orElseThrow(() -> new RuntimeException("User role not found")));
+            
+            log.info("All roles found successfully");
+            
+            // Initialize roles sets if they're null
+            if (adminUser.getRoles() == null) adminUser.setRoles(new java.util.HashSet<>());
+            if (managerUser.getRoles() == null) managerUser.setRoles(new java.util.HashSet<>());
+            if (salesUser.getRoles() == null) salesUser.setRoles(new java.util.HashSet<>());
+            if (regularUser.getRoles() == null) regularUser.setRoles(new java.util.HashSet<>());
+            if (johnDoe.getRoles() == null) johnDoe.setRoles(new java.util.HashSet<>());
+            
+            // Clear existing roles first to avoid duplicates
+            adminUser.getRoles().clear();
+            managerUser.getRoles().clear();
+            salesUser.getRoles().clear();
+            regularUser.getRoles().clear();
+            johnDoe.getRoles().clear();
+            
+            // Assign roles directly
+            adminUser.getRoles().add(adminRole);
+            managerUser.getRoles().add(managerRole);
+            salesUser.getRoles().add(salesRole);
+            regularUser.getRoles().add(userRole);
+            johnDoe.getRoles().add(managerRole);
+            johnDoe.getRoles().add(salesRole);
+            
+            // Save users
+            userRepository.save(adminUser);
+            userRepository.save(managerUser);
+            userRepository.save(salesUser);
+            userRepository.save(regularUser);
+            userRepository.save(johnDoe);
+            
+            log.info("Roles assigned successfully");
+        } catch (Exception e) {
+            log.error("Error assigning roles to users", e);
+            throw e;
+        }
     }
 }
