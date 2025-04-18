@@ -18,6 +18,6 @@ import java.util.Set;
 public class UserResponse extends BaseResponse<User> {
     private String username;
     private String email;
-    private String fullName;
+    private String name;
     private Set<RoleResponse> roles;
 }

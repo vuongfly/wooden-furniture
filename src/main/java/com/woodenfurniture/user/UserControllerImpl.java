@@ -1,7 +1,6 @@
 package com.woodenfurniture.user;
 
 import com.woodenfurniture.base.ApiResponse;
-import com.woodenfurniture.base.BaseController;
 import com.woodenfurniture.role.RoleResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,13 +16,10 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/users")
-public class UserControllerImpl extends BaseController<User, Long, UserRequest, UserResponse> implements UserController {
+public class UserControllerImpl extends UserBaseController implements UserController {
 
-    private final UserService userService;
-
-    public UserControllerImpl(UserService service) {
-        super(service, "User");
-        this.userService = service;
+    public UserControllerImpl(UserService userService) {
+        super(userService);
     }
 
     @Override

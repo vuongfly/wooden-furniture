@@ -20,7 +20,7 @@ public interface UserMapper extends BaseMapper<User, UserResponse> {
     @Override
     @Mapping(target = "username", source = "username")
     @Mapping(target = "email", source = "email")
-    @Mapping(target = "fullName", source = "name")
+    @Mapping(target = "name", source = "name")
     @Mapping(target = "roles", ignore = true)
     UserResponse toDto(User entity);
 
@@ -34,7 +34,7 @@ public interface UserMapper extends BaseMapper<User, UserResponse> {
 
     @Mapping(target = "username", source = "username")
     @Mapping(target = "email", source = "email")
-    @Mapping(target = "name", source = "fullName")
+    @Mapping(target = "name", source = "name")
     @Mapping(target = "age", source = "age")
     @Mapping(target = "gender", source = "gender")
     @Mapping(target = "phoneNumber", source = "phoneNumber")
@@ -52,7 +52,7 @@ public interface UserMapper extends BaseMapper<User, UserResponse> {
 
     @Mapping(target = "username", source = "username")
     @Mapping(target = "email", source = "email")
-    @Mapping(target = "name", source = "fullName")
+    @Mapping(target = "name", source = "name")
     @Mapping(target = "age", source = "age")
     @Mapping(target = "gender", source = "gender")
     @Mapping(target = "phoneNumber", source = "phoneNumber")

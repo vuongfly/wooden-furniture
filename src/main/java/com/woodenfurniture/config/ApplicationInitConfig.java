@@ -191,7 +191,7 @@ public class ApplicationInitConfig {
         request.setUsername(username);
         request.setEmail(email);
         request.setPassword(password);
-        request.setFullName(name);
+        request.setName(name);
         request.setAge(age);
         request.setGender(gender);
         request.setPhoneNumber(phoneNumber);

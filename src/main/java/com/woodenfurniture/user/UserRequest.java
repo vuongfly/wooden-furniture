@@ -33,7 +33,7 @@ public class UserRequest extends BaseRequest<User> {
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
 
-    private String fullName;
+    private String name;
 
     @NumberFormat
     Integer age;
