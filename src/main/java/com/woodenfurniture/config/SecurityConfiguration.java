@@ -52,6 +52,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(request -> {
                     request.requestMatchers(WHITE_LIST_URL).permitAll()
                             .requestMatchers(HttpMethod.GET, "/users/myInfo").authenticated()
+                            .requestMatchers(HttpMethod.GET, "/users/myRoles").authenticated()
                             .requestMatchers(HttpMethod.GET, "/users").hasAuthority("ROLE_Administrator")
                             .anyRequest().permitAll();
                 });

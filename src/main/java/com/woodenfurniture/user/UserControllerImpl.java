@@ -53,6 +53,12 @@ public class UserControllerImpl extends BaseController<User, Long, UserRequest, 
     }
     
     @Override
+    @GetMapping("/myRoles")
+    public ResponseEntity<Set<RoleResponse>> getMyRoles() {
+        return ResponseEntity.ok(userService.getMyRoles());
+    }
+    
+    @Override
     @PostMapping("/{id}/roles/add")
     public ResponseEntity<ApiResponse<UserResponse>> addRolesToUser(
             @PathVariable Long id, 

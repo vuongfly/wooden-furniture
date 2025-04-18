@@ -31,6 +31,13 @@ public interface UserService extends BaseService<User, Long, UserRequest, UserRe
     Set<RoleResponse> getRolesByUsername(String username);
     
     /**
+     * Get roles for the current authenticated user
+     * 
+     * @return Set of RoleResponse objects
+     */
+    Set<RoleResponse> getMyRoles();
+    
+    /**
      * Add roles to a user
      * 
      * @param userId User ID

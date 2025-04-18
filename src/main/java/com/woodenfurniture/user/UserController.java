@@ -26,6 +26,14 @@ public interface UserController extends Controller<User, Long, UserRequest, User
     ResponseEntity<Set<RoleResponse>> getUserRoles(@PathVariable String username);
     
     /**
+     * Get roles for the current authenticated user
+     * 
+     * @return Set of RoleResponse objects
+     */
+    @GetMapping("/myRoles")
+    ResponseEntity<Set<RoleResponse>> getMyRoles();
+    
+    /**
      * Add roles to a user
      * 
      * @param id User ID

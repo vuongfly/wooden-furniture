@@ -85,6 +85,27 @@ public class UserServiceImpl extends BaseServiceImpl<User, Long, UserRequest, Us
                 .map(roleMapper::toDto)
                 .collect(Collectors.toSet());
     }
+    
+    @Override
+    public Set<RoleResponse> getMyRoles() {
+        // Get the current authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || 
+                authentication.getPrincipal().equals("anonymousUser")) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+        
+        String username = authentication.getName();
+        
+        // Find user in database
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED));
+        
+        // Map roles to responses
+        return user.getRoles().stream()
+                .map(roleMapper::toDto)
+                .collect(Collectors.toSet());
+    }
 
     @Override
     @Transactional
