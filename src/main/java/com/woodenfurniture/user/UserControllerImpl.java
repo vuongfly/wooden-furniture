@@ -27,9 +27,17 @@ public class UserControllerImpl extends BaseController<User, Long, UserRequest, 
     }
 
     @Override
+    @GetMapping("/myInfo")
     public ResponseEntity<ApiResponse<UserResponse>> getMyInfo() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
+        
+        // Log for debugging
+        System.out.println("Authentication: " + authentication);
+        System.out.println("Username: " + username);
+        System.out.println("Is authenticated: " + authentication.isAuthenticated());
+        System.out.println("Authorities: " + authentication.getAuthorities());
+        
         UserResponse response = userService.getMyInfo();
         return ResponseEntity.ok(ApiResponse.<UserResponse>builder()
                 .code(200)

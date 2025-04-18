@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -47,35 +48,30 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(request -> {
-                    // TEMPORARILY PERMIT ALL REQUESTS FOR TESTING
-                    request.anyRequest().permitAll();
-                    
-                    // ORIGINAL SECURITY CONFIGURATION (COMMENTED OUT FOR TESTING)
-                    // request.requestMatchers(WHITE_LIST_URL).permitAll()
-                    //         .requestMatchers(HttpMethod.GET, "/users").hasRole(Role.ADMIN.name())
-                    //         .requestMatchers("/**").hasRole(Role.ADMIN.name())
-                    //         .anyRequest().permitAll();
+                    request.requestMatchers(WHITE_LIST_URL).permitAll()
+                            .requestMatchers(HttpMethod.GET, "/users/myInfo").authenticated()
+                            .requestMatchers(HttpMethod.GET, "/users").hasAuthority("ROLE_Administrator")
+                            .anyRequest().permitAll();
                 });
                 
-        // DISABLE JWT AUTHENTICATION TEMPORARILY
-        // http.oauth2ResourceServer(oauth2 ->
-        //         oauth2.jwt(jwtConfigurer ->
-        //                         jwtConfigurer.decoder(jwtDecoder)
-        //                                 .jwtAuthenticationConverter(jwtAuthenticationConverter()))
-        //                 .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
-        // );
+        http.oauth2ResourceServer(oauth2 ->
+                oauth2.jwt(jwtConfigurer ->
+                                jwtConfigurer.decoder(jwtDecoder)
+                                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
+        );
         
         return http.build();
     }
 
     @Bean
     JwtAuthenticationConverter jwtAuthenticationConverter() {
-        /*
-         * set prefix for authority Scope
-         * */
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
+        jwtGrantedAuthoritiesConverter.setAuthorityPrefix(""); // No prefix
+        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("scope"); // Use "scope" claim for authorities
+        
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
         return jwtAuthenticationConverter;

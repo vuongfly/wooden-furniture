@@ -15,11 +15,15 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -32,7 +36,6 @@ public class User extends BaseEntity implements UserDetails {
     String name;
     @Enumerated(EnumType.STRING)
     Gender gender;
-    //    Address address;
     Integer age;
     String username;
     String password;
@@ -44,26 +47,44 @@ public class User extends BaseEntity implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        if (roles == null) {
+            return new ArrayList<>();
+        }
+        
+        Set<SimpleGrantedAuthority> authorities = new HashSet<>();
+        
+        // Add role-based authorities
+        for (Role role : roles) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
+            
+            // Add permission-based authorities if the role has permissions
+            if (role.getPermissions() != null) {
+                authorities.addAll(role.getPermissions().stream()
+                        .map(permission -> new SimpleGrantedAuthority(permission.getName()))
+                        .collect(Collectors.toSet()));
+            }
+        }
+        
+        return authorities;
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return false;
+        return !getIsDeleted(); // Assuming deleted users should be disabled
     }
 }

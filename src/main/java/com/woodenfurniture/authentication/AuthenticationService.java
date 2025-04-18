@@ -21,6 +21,7 @@ import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,6 +34,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.StringJoiner;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -86,7 +88,7 @@ public class AuthenticationService {
 
     public void logout(LogoutRequest request) throws ParseException, JOSEException {
         try {
-            var signToken = verifyToken(request.getToken(), true); // why true? if not, the token can be used to refresh token
+            var signToken = verifyToken(request.getToken(), true); 
             String jit = signToken.getJWTClaimsSet().getJWTID();
             Date expiryDate = signToken.getJWTClaimsSet().getExpirationTime();
 
@@ -95,10 +97,8 @@ public class AuthenticationService {
                     .expiryTime(expiryDate)
                     .build();
 
-            // save invalidated token to database
             invalidatedTokenRepository.save(invalidatedToken);
         } catch (AppException e) {
-            // swallow exception if token is already expired from verifyToken method
             log.info("Token already expired");
         }
     }
@@ -115,7 +115,6 @@ public class AuthenticationService {
                 .expiryTime(expiryDate)
                 .build();
 
-        // save invalidated token to database
         invalidatedTokenRepository.save(invalidatedToken);
 
         // generate new token
@@ -165,38 +164,33 @@ public class AuthenticationService {
 
     private String generateToken(User user) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
+        
+        // Get all authorities directly from the user
+        String scope = user.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(" "));
+        
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getUsername())
                 .issuer("vuongfly")
-                .issueTime(new Date()) // add issue time
+                .issueTime(new Date())
                 .expirationTime(new Date(
                         Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()
-                )) // add expiration time
-                .jwtID(UUID.randomUUID().toString())    // add unique id for token
-                .claim("scope", buildScope(user))   // add default scope refer to user roles follow oauth2's standard
+                ))
+                .jwtID(UUID.randomUUID().toString())
+                .claim("scope", scope)  // Use the authorities from user.getAuthorities()
                 .build();
+        
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
         JWSObject jwsObject = new JWSObject(header, payload);
+        
         try {
-            jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes())); // sign token with signer key
+            jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
             return jwsObject.serialize();
         } catch (JOSEException e) {
             log.error("Cannot generate token: ", e);
             throw new RuntimeException(e);
         }
-    }
-
-    private String buildScope(User user) {
-        StringJoiner stringJoiner = new StringJoiner(" ");
-        if (!CollectionUtils.isEmpty(user.getRoles())) {
-            user.getRoles().forEach(role -> {
-                stringJoiner.add("ROLE_" + role.getName());
-                if (!CollectionUtils.isEmpty(role.getPermissions()))
-                    role.getPermissions()
-                            .forEach(permission -> stringJoiner.add(permission.getName()));
-            });
-        }
-        return stringJoiner.toString();
     }
 
     public AuthenticationResponse getTokenInfo() {
@@ -206,4 +200,4 @@ public class AuthenticationService {
         response.setAuthorities(authentication.getAuthorities());
         return response;
     }
-} 
+}
