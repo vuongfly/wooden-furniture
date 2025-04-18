@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -119,44 +121,138 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
 
             // Read the configuration
             SimpleExcelConfig config = excelConfigReader.readConfig(configPath);
-
-            // Import data from Excel using the configuration
-            List<T> entities = excelService.importFromExcelWithConfigFile(file, configPath, entityClass);
-
-            // Validate the imported entities
-            Map<T, String> validationResults = validateEntities(entities, config);
-
-            // Save valid entities to the database
-            for (T entity : entities) {
-                if (!validationResults.containsKey(entity)) {
-                    repository.save(entity);
-                }
-            }
-
-            // Process the original file and add validation results
+            
+            // Open the workbook for direct processing
             try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
                 Sheet sheet = workbook.getSheetAt(0);
                 
-                // Get header row
-                int headerRowIndex = config.getRowIndex();
-                Row headerRow = sheet.getRow(headerRowIndex);
-                if (headerRow == null) {
-                    throw new IllegalArgumentException("Header row not found at index " + headerRowIndex);
+                // If there's no data in the sheet, return a template
+                if (sheet.getPhysicalNumberOfRows() <= 1) {
+                    log.info("No data rows found in the Excel file");
+                    ByteArrayOutputStream emptyTemplate = excelService.generateTemplateFromConfigFile(configPath);
+                    return emptyTemplate;
                 }
                 
-                // Add "Result" header to the last column
-                int lastCellNum = headerRow.getLastCellNum();
-                Cell resultHeaderCell = headerRow.createCell(lastCellNum);
+                // Parse entities from the Excel rows manually to have better control
+                List<T> entities = new ArrayList<>();
+                Map<T, String> validationResults = new HashMap<>();
+                
+                // If we have rows, use row 0 as the header and process data rows starting from row 1
+                Row headerRow = sheet.getRow(0);
+                if (headerRow == null) {
+                    throw new IllegalArgumentException("Header row not found");
+                }
+                
+                // Map headers to column indices
+                Map<String, Integer> headerToIndex = new HashMap<>();
+                for (int i = 0; i < headerRow.getLastCellNum(); i++) {
+                    Cell cell = headerRow.getCell(i);
+                    if (cell != null && cell.getCellType() == CellType.STRING) {
+                        headerToIndex.put(cell.getStringCellValue(), i);
+                    }
+                }
+                
+                // Process data rows
+                for (int rowIndex = 1; rowIndex < sheet.getPhysicalNumberOfRows(); rowIndex++) {
+                    Row dataRow = sheet.getRow(rowIndex);
+                    if (dataRow == null) continue;
+                    
+                    try {
+                        // Create a new entity
+                        T entity = entityClass.getDeclaredConstructor().newInstance();
+                        entities.add(entity);
+                        
+                        // Populate entity fields from row data
+                        for (SimpleExcelConfig.ColumnMapping mapping : config.getColumn()) {
+                            Integer colIndex = headerToIndex.get(mapping.getHeaderExcel());
+                            if (colIndex == null) {
+                                log.warn("Column '{}' not found in Excel headers", mapping.getHeaderExcel());
+                                continue;
+                            }
+                            
+                            Cell cell = dataRow.getCell(colIndex);
+                            if (cell != null) {
+                                Object value = getCellValue(cell);
+                                setFieldValue(entity, mapping.getField(), value);
+                            }
+                        }
+                        
+                        // Validate the entity
+                        StringBuilder errors = new StringBuilder();
+                        for (SimpleExcelConfig.ColumnMapping mapping : config.getColumn()) {
+                            String fieldName = mapping.getField();
+                            Object value = getFieldValue(entity, fieldName);
+                            
+                            // Required field validation
+                            if (mapping.isRequired() && (value == null || 
+                                    (value instanceof String && ((String) value).trim().isEmpty()))) {
+                                errors.append(String.format("%s is required. ", mapping.getHeaderExcel()));
+                                continue;
+                            }
+                            
+                            // Type validation
+                            if (value != null) {
+                                String typeError = validateFieldType(value, mapping);
+                                if (typeError != null) {
+                                    errors.append(typeError);
+                                }
+                            }
+                            
+                            // Unique validation
+                            if (mapping.isUnique() && value != null) {
+                                String uniqueError = validateUniqueField(entity, fieldName, value);
+                                if (uniqueError != null) {
+                                    errors.append(uniqueError);
+                                }
+                            }
+                            
+                            // Regex validation
+                            if (value != null && value instanceof String && mapping.getRegex() != null) {
+                                String stringValue = (String) value;
+                                if (!stringValue.matches(mapping.getRegex())) {
+                                    if (mapping.getRegexErrorMessage() != null && !mapping.getRegexErrorMessage().isEmpty()) {
+                                        errors.append(mapping.getRegexErrorMessage()).append(" ");
+                                    } else {
+                                        errors.append(String.format("%s has invalid format. ", mapping.getHeaderExcel()));
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Custom validation
+                        String customError = validateEntity(entity);
+                        if (customError != null) {
+                            errors.append(customError);
+                        }
+                        
+                        // Store validation result
+                        if (errors.length() > 0) {
+                            validationResults.put(entity, errors.toString().trim());
+                        }
+                    } catch (Exception e) {
+                        log.error("Error processing row {}: {}", rowIndex, e.getMessage(), e);
+                    }
+                }
+                
+                // Save valid entities to the database
+                for (T entity : entities) {
+                    if (!validationResults.containsKey(entity)) {
+                        repository.save(entity);
+                    }
+                }
+                
+                // Add Result column to the header row
+                int resultColIndex = headerRow.getLastCellNum();
+                Cell resultHeaderCell = headerRow.createCell(resultColIndex);
                 resultHeaderCell.setCellValue("Result");
                 
-                // Add validation results to each data row
-                int entitiesIndex = 0;
-                for (int i = headerRowIndex + 1; i <= sheet.getLastRowNum() && entitiesIndex < entities.size(); i++) {
-                    Row row = sheet.getRow(i);
-                    if (row == null) continue;
+                // Add validation results to data rows
+                for (int rowIndex = 1, entityIndex = 0; rowIndex < sheet.getPhysicalNumberOfRows() && entityIndex < entities.size(); rowIndex++) {
+                    Row dataRow = sheet.getRow(rowIndex);
+                    if (dataRow == null) continue;
                     
-                    T entity = entities.get(entitiesIndex++);
-                    Cell resultCell = row.createCell(lastCellNum);
+                    T entity = entities.get(entityIndex++);
+                    Cell resultCell = dataRow.createCell(resultColIndex);
                     
                     if (validationResults.containsKey(entity)) {
                         resultCell.setCellValue(validationResults.get(entity));
@@ -165,14 +261,76 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
                     }
                 }
                 
-                // Write the modified workbook to output stream
-                java.io.ByteArrayOutputStream outputStream = new java.io.ByteArrayOutputStream();
+                // Write the modified workbook to a byte array
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                 workbook.write(outputStream);
                 return outputStream;
             }
         } catch (Exception e) {
             log.error("Error importing data for {}: {}", entityClass.getSimpleName(), e.getMessage(), e);
             throw new RuntimeException("Failed to import data: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Helper method to get cell value 
+     */
+    private Object getCellValue(Cell cell) {
+        if (cell == null) {
+            return null;
+        }
+
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue();
+            case NUMERIC:
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    return cell.getLocalDateTimeCellValue();
+                }
+                return cell.getNumericCellValue();
+            case BOOLEAN:
+                return cell.getBooleanCellValue();
+            case FORMULA:
+                return cell.getCellFormula();
+            case BLANK:
+                return null;
+            case ERROR:
+                return "#ERROR";
+            default:
+                return null;
+        }
+    }
+    
+    /**
+     * Helper method to set field value
+     */
+    private void setFieldValue(Object obj, String fieldName, Object value) {
+        try {
+            java.lang.reflect.Field field = obj.getClass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+
+            // Convert value to the appropriate type
+            if (value != null) {
+                if (field.getType() == String.class) {
+                    field.set(obj, value.toString());
+                } else if (field.getType() == Integer.class || field.getType() == int.class) {
+                    field.set(obj, value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(value.toString()));
+                } else if (field.getType() == Long.class || field.getType() == long.class) {
+                    field.set(obj, value instanceof Number ? ((Number) value).longValue() : Long.parseLong(value.toString()));
+                } else if (field.getType() == Double.class || field.getType() == double.class) {
+                    field.set(obj, value instanceof Number ? ((Number) value).doubleValue() : Double.parseDouble(value.toString()));
+                } else if (field.getType() == Boolean.class || field.getType() == boolean.class) {
+                    field.set(obj, value instanceof Boolean ? value : Boolean.valueOf(value.toString()));
+                } else if (field.getType() == java.time.LocalDateTime.class) {
+                    field.set(obj, value instanceof java.time.LocalDateTime ? value : java.time.LocalDateTime.parse(value.toString()));
+                } else if (field.getType() == java.time.LocalDate.class) {
+                    field.set(obj, value instanceof java.time.LocalDate ? value : java.time.LocalDate.parse(value.toString()));
+                } else {
+                    field.set(obj, value);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error setting field value for {}: {}", fieldName, e.getMessage());
         }
     }
 
