@@ -7,6 +7,11 @@ import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -128,8 +133,43 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
                 }
             }
 
-            // Export the data with validation results
-            return excelService.exportToExcelWithConfigFileAndResults(entities, configPath, validationResults);
+            // Process the original file and add validation results
+            try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+                Sheet sheet = workbook.getSheetAt(0);
+                
+                // Get header row
+                int headerRowIndex = config.getRowIndex();
+                Row headerRow = sheet.getRow(headerRowIndex);
+                if (headerRow == null) {
+                    throw new IllegalArgumentException("Header row not found at index " + headerRowIndex);
+                }
+                
+                // Add "Result" header to the last column
+                int lastCellNum = headerRow.getLastCellNum();
+                Cell resultHeaderCell = headerRow.createCell(lastCellNum);
+                resultHeaderCell.setCellValue("Result");
+                
+                // Add validation results to each data row
+                int entitiesIndex = 0;
+                for (int i = headerRowIndex + 1; i <= sheet.getLastRowNum() && entitiesIndex < entities.size(); i++) {
+                    Row row = sheet.getRow(i);
+                    if (row == null) continue;
+                    
+                    T entity = entities.get(entitiesIndex++);
+                    Cell resultCell = row.createCell(lastCellNum);
+                    
+                    if (validationResults.containsKey(entity)) {
+                        resultCell.setCellValue(validationResults.get(entity));
+                    } else {
+                        resultCell.setCellValue("Success");
+                    }
+                }
+                
+                // Write the modified workbook to output stream
+                java.io.ByteArrayOutputStream outputStream = new java.io.ByteArrayOutputStream();
+                workbook.write(outputStream);
+                return outputStream;
+            }
         } catch (Exception e) {
             log.error("Error importing data for {}: {}", entityClass.getSimpleName(), e.getMessage(), e);
             throw new RuntimeException("Failed to import data: " + e.getMessage(), e);
@@ -351,8 +391,8 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
                         errorMessage.append(uniqueError);
                     }
                 }
-
-                // Regex validation
+                
+                // Regex validation for string values
                 if (value != null && value instanceof String && column.getRegex() != null && !column.getRegex().isEmpty()) {
                     String stringValue = (String) value;
                     if (!stringValue.matches(column.getRegex())) {
