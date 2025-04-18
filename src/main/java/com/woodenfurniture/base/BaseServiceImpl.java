@@ -351,6 +351,18 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
                         errorMessage.append(uniqueError);
                     }
                 }
+
+                // Regex validation
+                if (value != null && value instanceof String && column.getRegex() != null && !column.getRegex().isEmpty()) {
+                    String stringValue = (String) value;
+                    if (!stringValue.matches(column.getRegex())) {
+                        if (column.getRegexErrorMessage() != null && !column.getRegexErrorMessage().isEmpty()) {
+                            errorMessage.append(column.getRegexErrorMessage()).append(" ");
+                        } else {
+                            errorMessage.append(String.format("%s has invalid format. ", column.getHeaderExcel()));
+                        }
+                    }
+                }
             }
 
             // Add custom validation if needed
@@ -408,10 +420,15 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
                         return String.format("%s must be a valid email address. ", column.getHeaderExcel());
                     }
                     break;
+                case PHONE:
+                    if (!(value instanceof String) || !((String) value).matches("^\\+?[0-9\\s\\-().]+$")) {
+                        return String.format("%s must be a valid phone number. ", column.getHeaderExcel());
+                    }
+                    break;
             }
         } catch (Exception e) {
             log.warn("Error validating field type: {}", e.getMessage());
-            return String.format("Error validating %s: %s", column.getHeaderExcel(), e.getMessage());
+            return String.format("Error validating %s: %s ", column.getHeaderExcel(), e.getMessage());
         }
 
         return null;
@@ -448,4 +465,4 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
         // This method should be overridden by subclasses to implement custom validation
         return null;
     }
-} 
+}

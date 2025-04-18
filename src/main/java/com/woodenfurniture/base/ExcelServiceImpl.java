@@ -102,7 +102,21 @@ public class ExcelServiceImpl implements ExcelService {
             Map<T, String> results) {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet(config.getName());
-            writeHeader(sheet, config);
+
+            // Create header row with an additional "Result" column
+            Row headerRow = sheet.createRow(config.getRowIndex());
+            int columnIndex = config.getColumnIndex();
+
+            for (SimpleExcelConfig.ColumnMapping mapping : config.getColumn()) {
+                Cell cell = headerRow.createCell(columnIndex++);
+                cell.setCellValue(mapping.getHeaderExcel());
+            }
+
+            // Add the Result column header
+            Cell resultHeaderCell = headerRow.createCell(columnIndex);
+            resultHeaderCell.setCellValue("Result");
+
+            // Write data with results
             writeDataWithResults(sheet, data, config, results);
             return writeWorkbook(workbook);
         } catch (IOException e) {
@@ -238,9 +252,11 @@ public class ExcelServiceImpl implements ExcelService {
             }
 
             // Write result if available
+            Cell resultCell = row.createCell(columnIndex);
             if (results.containsKey(entity)) {
-                Cell resultCell = row.createCell(columnIndex);
                 resultCell.setCellValue(results.get(entity));
+            } else {
+                resultCell.setCellValue("Success");
             }
         }
     }
@@ -334,4 +350,4 @@ public class ExcelServiceImpl implements ExcelService {
             log.error("Error setting field value for {}: {}", fieldName, e.getMessage());
         }
     }
-} 
+}
