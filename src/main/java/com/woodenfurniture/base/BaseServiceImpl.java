@@ -311,26 +311,103 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
 
             // Convert value to the appropriate type
             if (value != null) {
-                if (field.getType() == String.class) {
-                    field.set(obj, value.toString());
-                } else if (field.getType() == Integer.class || field.getType() == int.class) {
-                    field.set(obj, value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(value.toString()));
-                } else if (field.getType() == Long.class || field.getType() == long.class) {
-                    field.set(obj, value instanceof Number ? ((Number) value).longValue() : Long.parseLong(value.toString()));
-                } else if (field.getType() == Double.class || field.getType() == double.class) {
-                    field.set(obj, value instanceof Number ? ((Number) value).doubleValue() : Double.parseDouble(value.toString()));
-                } else if (field.getType() == Boolean.class || field.getType() == boolean.class) {
-                    field.set(obj, value instanceof Boolean ? value : Boolean.valueOf(value.toString()));
-                } else if (field.getType() == java.time.LocalDateTime.class) {
-                    field.set(obj, value instanceof java.time.LocalDateTime ? value : java.time.LocalDateTime.parse(value.toString()));
-                } else if (field.getType() == java.time.LocalDate.class) {
-                    field.set(obj, value instanceof java.time.LocalDate ? value : java.time.LocalDate.parse(value.toString()));
+                Class<?> fieldType = field.getType();
+                String stringValue = value.toString().trim();
+                
+                if (fieldType == String.class) {
+                    field.set(obj, stringValue);
+                } else if (fieldType == Integer.class || fieldType == int.class) {
+                    field.set(obj, value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(stringValue));
+                } else if (fieldType == Long.class || fieldType == long.class) {
+                    field.set(obj, value instanceof Number ? ((Number) value).longValue() : Long.parseLong(stringValue));
+                } else if (fieldType == Double.class || fieldType == double.class) {
+                    field.set(obj, value instanceof Number ? ((Number) value).doubleValue() : Double.parseDouble(stringValue));
+                } else if (fieldType == Boolean.class || fieldType == boolean.class) {
+                    field.set(obj, value instanceof Boolean ? value : Boolean.valueOf(stringValue));
+                } else if (fieldType == java.time.LocalDateTime.class) {
+                    if (value instanceof java.time.LocalDateTime) {
+                        field.set(obj, value);
+                    } else {
+                        try {
+                            field.set(obj, java.time.LocalDateTime.parse(stringValue));
+                        } catch (Exception e) {
+                            // Try alternative date formats
+                            try {
+                                // Try to parse as MM/dd/yyyy
+                                java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("M/d/yyyy");
+                                java.time.LocalDate date = java.time.LocalDate.parse(stringValue, formatter);
+                                field.set(obj, date.atStartOfDay());
+                            } catch (Exception e2) {
+                                log.warn("Could not parse date '{}' with standard formats", stringValue);
+                                throw e2;
+                            }
+                        }
+                    }
+                } else if (fieldType == java.time.LocalDate.class) {
+                    if (value instanceof java.time.LocalDate) {
+                        field.set(obj, value);
+                    } else if (value instanceof java.time.LocalDateTime) {
+                        field.set(obj, ((java.time.LocalDateTime) value).toLocalDate());
+                    } else {
+                        try {
+                            field.set(obj, java.time.LocalDate.parse(stringValue));
+                        } catch (Exception e) {
+                            // Try alternative date formats
+                            try {
+                                // Try to parse as MM/dd/yyyy
+                                java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("M/d/yyyy");
+                                java.time.LocalDate date = java.time.LocalDate.parse(stringValue, formatter);
+                                field.set(obj, date);
+                            } catch (Exception e2) {
+                                log.warn("Could not parse date '{}' with standard formats", stringValue);
+                                throw e2;
+                            }
+                        }
+                    }
+                } else if (fieldType.isEnum()) {
+                    // Handle enum types (including Gender)
+                    String strValue = stringValue.toUpperCase();
+                    try {
+                        // Get enum value from string
+                        Object enumValue = fieldType.getDeclaredMethod("valueOf", String.class).invoke(null, strValue);
+                        field.set(obj, enumValue);
+                    } catch (Exception e) {
+                        log.warn("Failed to convert '{}' to enum type {}: {}", strValue, fieldType.getName(), e.getMessage());
+                        // Try to find a matching enum value (case-insensitive)
+                        for (Object enumConstant : fieldType.getEnumConstants()) {
+                            if (enumConstant.toString().equalsIgnoreCase(strValue)) {
+                                field.set(obj, enumConstant);
+                                break;
+                            }
+                        }
+                    }
+                } else if (java.util.Set.class.isAssignableFrom(fieldType)) {
+                    // Handle Set types, like roles
+                    if (fieldName.equals("roles")) {
+                        // Special handling for roles
+                        java.util.Set<Object> roleSet = new java.util.HashSet<>();
+                        
+                        // Split by comma if multiple roles are provided
+                        String[] roleNames = stringValue.split(",");
+                        for (String roleName : roleNames) {
+                            // Create a dummy Role object with just the name set
+                            // The actual role will be loaded from the database when needed
+                            com.woodenfurniture.role.Role role = new com.woodenfurniture.role.Role();
+                            role.setName(roleName.trim());
+                            roleSet.add(role);
+                        }
+                        
+                        field.set(obj, roleSet);
+                    } else {
+                        log.warn("Unhandled Set field: {}", fieldName);
+                    }
                 } else {
+                    log.warn("Unhandled field type: {} for field: {}", fieldType.getName(), fieldName);
                     field.set(obj, value);
                 }
             }
         } catch (Exception e) {
-            log.error("Error setting field value for {}: {}", fieldName, e.getMessage());
+            log.error("Error setting field value for {}: {}", fieldName, e.getMessage(), e);
         }
     }
 
