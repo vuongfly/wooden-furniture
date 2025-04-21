@@ -172,8 +172,10 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
                             
                             Cell cell = dataRow.getCell(colIndex);
                             if (cell != null) {
-                                Object value = getCellValue(cell);
-                                setFieldValue(entity, mapping.getField(), value);
+                                Object rawValue = getCellValue(cell);
+                                // first convert according to mapping.type (+ mapping.format for DATE)
+                                Object typedValue = convertValueBasedOnMapping(rawValue, mapping, entity);
+                                setFieldValue(entity, mapping.getField(), typedValue);
                             }
                         }
                         
@@ -435,6 +437,16 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
     }
 
     /**
+     * Generate an Excel import template based on the JSON config.
+     */
+    @Override
+    @Transactional
+    public ByteArrayOutputStream generateTemplate() {
+        String configPath = getImportConfigPath();
+        return excelService.generateTemplateFromConfigFile(configPath);
+    }
+
+    /**
      * Create search specification based on the search request
      *
      * @param searchRequest Search request
@@ -681,7 +693,8 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
                     }
                     break;
                 case DATE:
-                    if (!(value instanceof java.time.LocalDateTime)) {
+                    if (!(value instanceof java.time.LocalDateTime) &&
+                        !(value instanceof java.time.LocalDate)) {
                         return String.format("%s must be a valid date. ", column.getHeaderExcel());
                     }
                     break;
@@ -739,5 +752,76 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
     protected String validateEntity(T entity) {
         // This method should be overridden by subclasses to implement custom validation
         return null;
+    }
+
+    /**
+     * Convert a raw Excel‐cell value to the right Java type
+     * based on ColumnMapping.type and, for DATE, its format.
+     */
+    private Object convertValueBasedOnMapping(Object rawValue,
+                                              SimpleExcelConfig.ColumnMapping mapping,
+                                              Object entity) {
+        if (rawValue == null) {
+            return null;
+        }
+        SimpleExcelConfig.FieldType type = mapping.getType();
+        String stringValue = rawValue.toString().trim();
+        switch (type) {
+            case STRING:
+            case EMAIL:
+            case PHONE:
+                return stringValue;
+            case NUMBER:
+                try {
+                    if (rawValue instanceof Number) {
+                        return rawValue;
+                    }
+                    return Double.parseDouble(stringValue);
+                } catch (Exception e) {
+                    log.warn("Unable to parse number '{}' for field {}: {}", stringValue, mapping.getField(), e.getMessage());
+                    return rawValue;
+                }
+            case BOOLEAN:
+                if (rawValue instanceof Boolean) {
+                    return rawValue;
+                }
+                return Boolean.parseBoolean(stringValue);
+            case DATE:
+                try {
+                    java.lang.reflect.Field field = entity.getClass()
+                        .getDeclaredField(mapping.getField());
+                    field.setAccessible(true);
+                    Class<?> fieldType = field.getType();
+
+                    // if POI already gave us a date object, just use it
+                    if (rawValue instanceof java.time.LocalDateTime ||
+                        rawValue instanceof java.time.LocalDate) {
+                        return rawValue;
+                    }
+
+                    // parse string according to your JSON "format"
+                    String format = mapping.getFormat();
+                    if (format != null && !format.isEmpty()) {
+                        DateTimeFormatter fmt = DateTimeFormatter.ofPattern(format);
+                        if (fieldType == java.time.LocalDate.class) {
+                            return java.time.LocalDate.parse(stringValue, fmt);
+                        } else if (fieldType == java.time.LocalDateTime.class) {
+                            return java.time.LocalDateTime.parse(stringValue, fmt);
+                        }
+                    }
+
+                    // fallback to default ISO parsing
+                    if (fieldType == java.time.LocalDate.class) {
+                        return java.time.LocalDate.parse(stringValue);
+                    } else if (fieldType == java.time.LocalDateTime.class) {
+                        return java.time.LocalDateTime.parse(stringValue);
+                    }
+                } catch (Exception e) {
+                    log.warn("Could not parse date '{}' for field {}: {}", stringValue, mapping.getField(), e.getMessage());
+                }
+                return rawValue;
+            default:
+                return rawValue;
+        }
     }
 }

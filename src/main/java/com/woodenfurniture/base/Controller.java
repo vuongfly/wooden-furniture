@@ -61,4 +61,10 @@ public interface Controller<T extends BaseEntity, ID, Req extends BaseRequest<T>
     ResponseEntity<Resource> exportData(
             @RequestParam(required = false) BaseSearchRequest searchTerm,
             Pageable pageable);
+
+    /**
+     * Download an Excel import template for this entity.
+     */
+    @GetMapping("/template")
+    ResponseEntity<Resource> generateTemplate();
 } 

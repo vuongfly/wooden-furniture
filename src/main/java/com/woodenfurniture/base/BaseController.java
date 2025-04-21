@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -139,6 +140,20 @@ public abstract class BaseController<T extends BaseEntity, ID, Req extends BaseR
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xlsx")
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .contentLength(outputStream.size())
+                .body(resource);
+    }
+
+    @Override
+    @GetMapping("/template")
+    public ResponseEntity<Resource> generateTemplate() {
+        ByteArrayOutputStream outputStream = service.generateTemplate();
+        ByteArrayResource resource = new ByteArrayResource(outputStream.toByteArray());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=template.xlsx")
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .contentLength(outputStream.size())
                 .body(resource);
     }

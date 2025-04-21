@@ -104,4 +104,11 @@ public interface BaseService<T extends BaseEntity, ID, R extends BaseRequest<T>,
      * @return Excel file
      */
     ByteArrayOutputStream exportData(BaseSearchRequest searchRequest, Pageable pageable);
+
+    /**
+     * Generate an Excel import template based on this entity's config file.
+     *
+     * @return Excel template as ByteArrayOutputStream
+     */
+    ByteArrayOutputStream generateTemplate();
 } 
