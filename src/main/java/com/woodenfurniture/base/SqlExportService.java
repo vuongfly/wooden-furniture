@@ -124,10 +124,7 @@ public class SqlExportService {
             cell.setCellStyle(headerStyle);
         }
         
-        // Auto-size columns for better readability
-        for (int i = config.getColumnIndex(); i < columnIndex; i++) {
-            sheet.autoSizeColumn(i);
-        }
+        // We'll auto-size columns after writing the data
     }
 
     /**
@@ -137,7 +134,7 @@ public class SqlExportService {
      * @param config Excel configuration with SQL query
      */
     private void writeDataFromSql(Sheet sheet, SimpleExcelConfig config) {
-        // Get the SQL query - either from file or inline
+        // Get the SQL query from file
         String sqlQuery = determineSqlQuery(config);
         List<Map<String, Object>> results = jdbcTemplate.queryForList(sqlQuery);
         
@@ -152,6 +149,16 @@ public class SqlExportService {
                 Object value = row.get(mapping.getField());
                 setCellValue(cell, value, mapping);
             }
+        }
+        
+        // Auto-size columns after all data is written to better fit content
+        int columnCount = config.getColumn().size();
+        for (int i = config.getColumnIndex(); i < config.getColumnIndex() + columnCount; i++) {
+            sheet.autoSizeColumn(i);
+            
+            // Add a bit of extra width for better readability (10% extra)
+            int currentWidth = sheet.getColumnWidth(i);
+            sheet.setColumnWidth(i, (int)(currentWidth * 1.1));
         }
     }
 

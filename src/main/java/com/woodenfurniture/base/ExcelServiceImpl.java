@@ -340,10 +340,7 @@ public class ExcelServiceImpl implements ExcelService {
             cell.setCellStyle(headerStyle);
         }
         
-        // Auto-size columns for better readability
-        for (int i = config.getColumnIndex(); i <= lastColumn; i++) {
-            sheet.autoSizeColumn(i);
-        }
+        // We'll auto-size columns after writing data to account for content width
     }
 
     private <T> void writeData(Sheet sheet, List<T> data, SimpleExcelConfig config) {
@@ -358,6 +355,16 @@ public class ExcelServiceImpl implements ExcelService {
                 Object value = getFieldValue(entity, mapping.getField());
                 setCellValue(cell, value);
             }
+        }
+        
+        // Auto-size columns after all data is written to better fit content
+        int columnCount = config.getColumn().size();
+        for (int i = config.getColumnIndex(); i < config.getColumnIndex() + columnCount; i++) {
+            sheet.autoSizeColumn(i);
+            
+            // Add a bit of extra width for better readability (10% extra)
+            int currentWidth = sheet.getColumnWidth(i);
+            sheet.setColumnWidth(i, (int)(currentWidth * 1.1));
         }
     }
 
@@ -382,6 +389,16 @@ public class ExcelServiceImpl implements ExcelService {
             } else {
                 resultCell.setCellValue("Success");
             }
+        }
+        
+        // Auto-size columns after all data is written to better fit content
+        int columnCount = config.getColumn().size();
+        for (int i = config.getColumnIndex(); i < config.getColumnIndex() + columnCount + 1; i++) { // +1 for the result column
+            sheet.autoSizeColumn(i);
+            
+            // Add a bit of extra width for better readability (10% extra)
+            int currentWidth = sheet.getColumnWidth(i);
+            sheet.setColumnWidth(i, (int)(currentWidth * 1.1));
         }
     }
 
