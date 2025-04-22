@@ -4,10 +4,6 @@
   "columnIndex": 0,
   "column": [
     {
-      "headerExcel": "ID",
-      "field": "id"
-    },
-    {
       "headerExcel": "Name",
       "field": "name"
     },
@@ -41,13 +37,12 @@
       "multiple": true
     },
     {
-      "headerExcel": "Created At",
-      "field": "createdAt",
-      "format": "dd/MM/yyyy HH:mm:ss"
+      "headerExcel": "Last modified by",
+      "field": "lastModifiedBy"
     },
     {
-      "headerExcel": "Updated At",
-      "field": "updatedAt",
+      "headerExcel": "Last modified update",
+      "field": "lastModifiedDate",
       "format": "dd/MM/yyyy HH:mm:ss"
     }
   ]
