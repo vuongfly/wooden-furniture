@@ -36,6 +36,12 @@ public class SimpleExcelConfig {
      * If provided, the export will be SQL-based rather than entity-based
      */
     private String sql;
+    
+    /**
+     * Path to SQL file containing query to execute for export
+     * If provided, this will be loaded and used instead of the inline sql property
+     */
+    private String sqlFilePath;
 
     /**
      * List of column mappings

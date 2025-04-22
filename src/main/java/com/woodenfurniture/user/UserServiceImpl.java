@@ -54,12 +54,12 @@ public class UserServiceImpl extends BaseServiceImpl<User, Long, UserRequest, Us
 
     @Override
     protected String getImportConfigPath() {
-        return "config/user-import-config.json";
+        return "config/excel/user/user-import-config.json";
     }
 
     @Override
     protected String getExportConfigPath() {
-        return "config/user-export-config.json";
+        return "config/excel/user/user-export-config.json";
     }
 
     @Override

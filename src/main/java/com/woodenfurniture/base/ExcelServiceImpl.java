@@ -126,6 +126,7 @@ public class ExcelServiceImpl implements ExcelService {
                     .columnIndex(config.getColumnIndex())
                     .column(config.getColumn())
                     .sql(config.getSql())
+                    .sqlFilePath(config.getSqlFilePath())
                     .build();
 
             // Write the header, which will include the title based on the config name
@@ -190,6 +191,7 @@ public class ExcelServiceImpl implements ExcelService {
                         .columnIndex(config.getColumnIndex())
                         .column(config.getColumn())
                         .sql(config.getSql())
+                        .sqlFilePath(config.getSqlFilePath())
                         .build();
             }
             

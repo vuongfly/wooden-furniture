@@ -33,7 +33,7 @@ public class PermissionServiceImpl extends BaseServiceImpl<Permission, Long, Per
 
     @Override
     protected String getImportConfigPath() {
-        return "config/permission-import-config.json";
+        return "config/excel/permission/permission-import-config.json";
     }
 
     @Override

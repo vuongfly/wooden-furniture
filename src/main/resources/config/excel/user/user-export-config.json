@@ -2,7 +2,7 @@
   "name": "Users",
   "rowIndex": 1,
   "columnIndex": 0,
-  "sql": "SELECT\n\tu.id,\n\tu.username,\n\tu.name,\n\tu.email,\n\tu.phone_number as phoneNumber,\n\tu.gender,\n\tu.age,\n\tu.dob,\n\tu.code,\n\tu.last_modified_by as lastModifiedBy,\n\tu.last_modified_date as lastModifiedDate,\n\tGROUP_CONCAT(r.code) as roles\nFROM\n\tuser u\nLEFT JOIN user_roles ur ON\n\tu.id = ur.user_id\nLEFT JOIN role r ON\n\tur.roles_id = r.id\nGROUP BY\n\tu.id",
+  "sqlFilePath": "sql/user/user_export.sql",
   "column": [
     {
       "headerExcel": "Name",

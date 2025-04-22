@@ -9,11 +9,17 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileCopyUtils;
+import org.springframework.util.StringUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -37,7 +43,10 @@ public class SqlExportService {
      * @return Excel file as ByteArrayOutputStream
      */
     public ByteArrayOutputStream exportToExcel(SimpleExcelConfig config) {
-        if (config.getSql() == null || config.getSql().isEmpty()) {
+        // Determine the SQL query to use - either from sqlFilePath or inline sql
+        String sqlQuery = determineSqlQuery(config);
+        
+        if (sqlQuery == null || sqlQuery.isEmpty()) {
             throw new IllegalArgumentException("SQL query is missing in the configuration");
         }
 
@@ -49,7 +58,7 @@ public class SqlExportService {
             if (config.getName() != null && !config.getName().isEmpty() && startRow > 0) {
                 Row titleRow = sheet.createRow(0);
                 Cell titleCell = titleRow.createCell(0);
-                titleCell.setCellValue(config.getName() + " Export");
+                titleCell.setCellValue(config.getName());
                 
                 // Create title style
                 org.apache.poi.ss.usermodel.CellStyle titleStyle = workbook.createCellStyle();
@@ -128,7 +137,9 @@ public class SqlExportService {
      * @param config Excel configuration with SQL query
      */
     private void writeDataFromSql(Sheet sheet, SimpleExcelConfig config) {
-        List<Map<String, Object>> results = jdbcTemplate.queryForList(config.getSql());
+        // Get the SQL query - either from file or inline
+        String sqlQuery = determineSqlQuery(config);
+        List<Map<String, Object>> results = jdbcTemplate.queryForList(sqlQuery);
         
         int rowIndex = config.getRowIndex() + 1;
         for (Map<String, Object> row : results) {
@@ -151,6 +162,32 @@ public class SqlExportService {
      * @param value Value to set
      * @param mapping Column mapping configuration
      */
+    /**
+     * Determines the SQL query to use based on configuration
+     * Prioritizes loading from sqlFilePath if provided
+     *
+     * @param config Excel configuration
+     * @return SQL query string
+     */
+    private String determineSqlQuery(SimpleExcelConfig config) {
+        // Check if sqlFilePath is provided
+        if (StringUtils.hasText(config.getSqlFilePath())) {
+            try {
+                // Load SQL from file (from classpath resources)
+                ClassPathResource resource = new ClassPathResource(config.getSqlFilePath());
+                try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
+                    return FileCopyUtils.copyToString(reader);
+                }
+            } catch (IOException e) {
+                log.error("Error loading SQL from file: {}", config.getSqlFilePath(), e);
+                throw new RuntimeException("Failed to load SQL from file: " + e.getMessage(), e);
+            }
+        }
+        
+        // Otherwise use the inline SQL
+        return config.getSql();
+    }
+    
     private void setCellValue(Cell cell, Object value, SimpleExcelConfig.ColumnMapping mapping) {
         if (value == null) {
             cell.setBlank();
