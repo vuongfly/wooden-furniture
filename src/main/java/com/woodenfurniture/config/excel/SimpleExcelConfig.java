@@ -32,14 +32,8 @@ public class SimpleExcelConfig {
     private int columnIndex;
     
     /**
-     * SQL query to execute for export
-     * If provided, the export will be SQL-based rather than entity-based
-     */
-    private String sql;
-    
-    /**
      * Path to SQL file containing query to execute for export
-     * If provided, this will be loaded and used instead of the inline sql property
+     * If provided, export will be SQL-based rather than entity-based
      */
     private String sqlFilePath;
 

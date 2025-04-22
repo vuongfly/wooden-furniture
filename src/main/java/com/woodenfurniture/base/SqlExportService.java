@@ -43,11 +43,11 @@ public class SqlExportService {
      * @return Excel file as ByteArrayOutputStream
      */
     public ByteArrayOutputStream exportToExcel(SimpleExcelConfig config) {
-        // Determine the SQL query to use - either from sqlFilePath or inline sql
+        // Load SQL query from file
         String sqlQuery = determineSqlQuery(config);
         
         if (sqlQuery == null || sqlQuery.isEmpty()) {
-            throw new IllegalArgumentException("SQL query is missing in the configuration");
+            throw new IllegalArgumentException("SQL file is empty or could not be read");
         }
 
         try (Workbook workbook = new XSSFWorkbook()) {
@@ -163,29 +163,26 @@ public class SqlExportService {
      * @param mapping Column mapping configuration
      */
     /**
-     * Determines the SQL query to use based on configuration
-     * Prioritizes loading from sqlFilePath if provided
+     * Loads SQL query from file
      *
      * @param config Excel configuration
      * @return SQL query string
      */
     private String determineSqlQuery(SimpleExcelConfig config) {
-        // Check if sqlFilePath is provided
-        if (StringUtils.hasText(config.getSqlFilePath())) {
-            try {
-                // Load SQL from file (from classpath resources)
-                ClassPathResource resource = new ClassPathResource(config.getSqlFilePath());
-                try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
-                    return FileCopyUtils.copyToString(reader);
-                }
-            } catch (IOException e) {
-                log.error("Error loading SQL from file: {}", config.getSqlFilePath(), e);
-                throw new RuntimeException("Failed to load SQL from file: " + e.getMessage(), e);
-            }
+        if (!StringUtils.hasText(config.getSqlFilePath())) {
+            throw new IllegalArgumentException("SQL file path is required for SQL-based export");
         }
         
-        // Otherwise use the inline SQL
-        return config.getSql();
+        try {
+            // Load SQL from file (from classpath resources)
+            ClassPathResource resource = new ClassPathResource(config.getSqlFilePath());
+            try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
+                return FileCopyUtils.copyToString(reader);
+            }
+        } catch (IOException e) {
+            log.error("Error loading SQL from file: {}", config.getSqlFilePath(), e);
+            throw new RuntimeException("Failed to load SQL from file: " + e.getMessage(), e);
+        }
     }
     
     private void setCellValue(Cell cell, Object value, SimpleExcelConfig.ColumnMapping mapping) {

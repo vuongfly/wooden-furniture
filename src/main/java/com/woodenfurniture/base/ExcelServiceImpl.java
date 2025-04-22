@@ -89,7 +89,7 @@ public class ExcelServiceImpl implements ExcelService {
     @Override
     public <T> ByteArrayOutputStream exportToExcel(List<T> data, SimpleExcelConfig config) {
         // Check if SQL-based export is requested
-        if (config.getSql() != null && !config.getSql().isEmpty()) {
+        if (config.getSqlFilePath() != null && !config.getSqlFilePath().isEmpty()) {
             return sqlExportService.exportToExcel(config);
         }
         
@@ -111,7 +111,7 @@ public class ExcelServiceImpl implements ExcelService {
             SimpleExcelConfig config,
             Map<T, String> results) {
         // SQL-based export doesn't support validation results yet
-        if (config.getSql() != null && !config.getSql().isEmpty()) {
+        if (config.getSqlFilePath() != null && !config.getSqlFilePath().isEmpty()) {
             log.warn("SQL-based export doesn't support validation results. Using standard SQL export.");
             return sqlExportService.exportToExcel(config);
         }
@@ -125,7 +125,6 @@ public class ExcelServiceImpl implements ExcelService {
                     .rowIndex(config.getRowIndex())
                     .columnIndex(config.getColumnIndex())
                     .column(config.getColumn())
-                    .sql(config.getSql())
                     .sqlFilePath(config.getSqlFilePath())
                     .build();
 
@@ -190,7 +189,6 @@ public class ExcelServiceImpl implements ExcelService {
                         .rowIndex(1)
                         .columnIndex(config.getColumnIndex())
                         .column(config.getColumn())
-                        .sql(config.getSql())
                         .sqlFilePath(config.getSqlFilePath())
                         .build();
             }

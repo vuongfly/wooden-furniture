@@ -422,8 +422,8 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
             // Get the configuration
             SimpleExcelConfig config = excelConfigReader.readConfig(configPath);
             
-            // If SQL query is defined in the config, use SQL-based export
-            if (config.getSql() != null && !config.getSql().isEmpty()) {
+            // If SQL file path is defined in the config, use SQL-based export
+            if (config.getSqlFilePath() != null && !config.getSqlFilePath().isEmpty()) {
                 return excelService.exportToExcelWithConfigFile(null, configPath);
             } else {
                 // Get data based on search criteria the traditional way
