@@ -10,13 +10,15 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -118,13 +120,34 @@ public abstract class BaseController<T extends BaseEntity, ID, Req extends BaseR
                 .build());
     }
 
+    /**
+     * Generate a file name with entity name prefix and date postfix
+     * Format: [entityName]_[baseName]_[year_month_day].xlsx
+     *
+     * @param baseName The base name of the file
+     * @return Formatted file name
+     */
+    protected String generateFileName(String baseName) {
+        // Format the current date as year_month_day
+        String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd"));
+        
+        // Convert entity name to lowercase and replace spaces with underscores
+        String normalizedEntityName = entityName.toLowerCase().replace(" ", "_");
+        
+        // Return formatted filename
+        return normalizedEntityName + "_" + baseName + "_" + dateStr + ".xlsx";
+    }
+
     @Override
     public ResponseEntity<Resource> importData(@RequestParam("file") MultipartFile file) {
         ByteArrayOutputStream outputStream = service.importData(file);
         ByteArrayResource resource = new ByteArrayResource(outputStream.toByteArray());
 
+        // Generate filename with entity name prefix and date postfix
+        String filename = generateFileName("import_result");
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=import_result.xlsx")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .contentLength(outputStream.size())
                 .body(resource);
@@ -137,8 +160,11 @@ public abstract class BaseController<T extends BaseEntity, ID, Req extends BaseR
         ByteArrayOutputStream outputStream = service.exportData(searchTerm, pageable);
         ByteArrayResource resource = new ByteArrayResource(outputStream.toByteArray());
 
+        // Generate filename with entity name prefix and date postfix
+        String filename = generateFileName("export");
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xlsx")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .contentLength(outputStream.size())
                 .body(resource);
@@ -150,11 +176,14 @@ public abstract class BaseController<T extends BaseEntity, ID, Req extends BaseR
         ByteArrayOutputStream outputStream = service.generateTemplate();
         ByteArrayResource resource = new ByteArrayResource(outputStream.toByteArray());
 
+        // Generate filename with entity name prefix and date postfix
+        String filename = generateFileName("template");
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=template.xlsx")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                 .contentType(MediaType.parseMediaType(
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .contentLength(outputStream.size())
                 .body(resource);
     }
-} 
+}
