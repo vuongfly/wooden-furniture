@@ -418,18 +418,26 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
         try {
             // Get the configuration file path for this entity
             String configPath = getExportConfigPath();
-
-            // Get data based on search criteria
-            List<T> entities;
-            if (searchRequest != null) {
-                Specification<T> spec = createSearchSpecification(searchRequest);
-                entities = repository.findAll(spec);
+            
+            // Get the configuration
+            SimpleExcelConfig config = excelConfigReader.readConfig(configPath);
+            
+            // If SQL query is defined in the config, use SQL-based export
+            if (config.getSql() != null && !config.getSql().isEmpty()) {
+                return excelService.exportToExcelWithConfigFile(null, configPath);
             } else {
-                entities = repository.findByIsDeletedFalse();
-            }
+                // Get data based on search criteria the traditional way
+                List<T> entities;
+                if (searchRequest != null) {
+                    Specification<T> spec = createSearchSpecification(searchRequest);
+                    entities = repository.findAll(spec);
+                } else {
+                    entities = repository.findByIsDeletedFalse();
+                }
 
-            // Export data to Excel
-            return excelService.exportToExcelWithConfigFile(entities, configPath);
+                // Export data to Excel
+                return excelService.exportToExcelWithConfigFile(entities, configPath);
+            }
         } catch (Exception e) {
             log.error("Error exporting data for {}: {}", entityClass.getSimpleName(), e.getMessage(), e);
             throw new RuntimeException("Failed to export data: " + e.getMessage(), e);

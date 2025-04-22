@@ -30,6 +30,12 @@ public class SimpleExcelConfig {
      * Column index where data starts (0-based)
      */
     private int columnIndex;
+    
+    /**
+     * SQL query to execute for export
+     * If provided, the export will be SQL-based rather than entity-based
+     */
+    private String sql;
 
     /**
      * List of column mappings
@@ -102,4 +108,4 @@ public class SimpleExcelConfig {
         EMAIL,
         PHONE
     }
-} 
+}

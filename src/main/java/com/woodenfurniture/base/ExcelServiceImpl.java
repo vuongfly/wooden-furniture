@@ -5,11 +5,14 @@ import com.woodenfurniture.config.excel.SimpleExcelConfigReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +31,7 @@ import java.util.Map;
 public class ExcelServiceImpl implements ExcelService {
 
     private final SimpleExcelConfigReader excelConfigReader;
+    private final SqlExportService sqlExportService;
 
     @Override
     public <T> List<T> importFromExcel(MultipartFile file, SimpleExcelConfig config, Class<T> entityClass) {
@@ -84,6 +88,12 @@ public class ExcelServiceImpl implements ExcelService {
 
     @Override
     public <T> ByteArrayOutputStream exportToExcel(List<T> data, SimpleExcelConfig config) {
+        // Check if SQL-based export is requested
+        if (config.getSql() != null && !config.getSql().isEmpty()) {
+            return sqlExportService.exportToExcel(config);
+        }
+        
+        // Regular entity-based export
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet(config.getName());
             writeHeader(sheet, config);
@@ -100,21 +110,50 @@ public class ExcelServiceImpl implements ExcelService {
             List<T> data,
             SimpleExcelConfig config,
             Map<T, String> results) {
+        // SQL-based export doesn't support validation results yet
+        if (config.getSql() != null && !config.getSql().isEmpty()) {
+            log.warn("SQL-based export doesn't support validation results. Using standard SQL export.");
+            return sqlExportService.exportToExcel(config);
+        }
+        
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet(config.getName());
 
             // Create header row with an additional "Result" column
             Row headerRow = sheet.createRow(config.getRowIndex());
             int columnIndex = config.getColumnIndex();
+            
+            // Create cell style for headers
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerFont.setFontHeightInPoints((short) 12); // Slightly larger font
+            headerStyle.setFont(headerFont);
+            
+            // Optional: Add background color and border
+            headerStyle.setFillForegroundColor(org.apache.poi.ss.usermodel.IndexedColors.GREY_25_PERCENT.getIndex());
+            headerStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            headerStyle.setBorderTop(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            headerStyle.setBorderLeft(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            headerStyle.setBorderRight(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            headerStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER);
 
             for (SimpleExcelConfig.ColumnMapping mapping : config.getColumn()) {
                 Cell cell = headerRow.createCell(columnIndex++);
                 cell.setCellValue(mapping.getHeaderExcel());
+                cell.setCellStyle(headerStyle);
             }
 
             // Add the Result column header
             Cell resultHeaderCell = headerRow.createCell(columnIndex);
             resultHeaderCell.setCellValue("Result");
+            resultHeaderCell.setCellStyle(headerStyle);
+            
+            // Auto-size columns
+            for (int i = config.getColumnIndex(); i <= columnIndex; i++) {
+                sheet.autoSizeColumn(i);
+            }
 
             // Write data with results
             writeDataWithResults(sheet, data, config, results);
@@ -144,7 +183,49 @@ public class ExcelServiceImpl implements ExcelService {
     public ByteArrayOutputStream generateTemplate(SimpleExcelConfig config) {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet(config.getName());
+            
+            // Add a title row if config name is available
+            if (config.getName() != null && !config.getName().isEmpty()) {
+                Row titleRow = sheet.createRow(0);
+                Cell titleCell = titleRow.createCell(0);
+                titleCell.setCellValue(config.getName() + " Template");
+                
+                // Create title style
+                CellStyle titleStyle = workbook.createCellStyle();
+                Font titleFont = workbook.createFont();
+                titleFont.setBold(true);
+                titleFont.setFontHeightInPoints((short) 14);
+                titleStyle.setFont(titleFont);
+                titleCell.setCellStyle(titleStyle);
+                
+                // Merge cells for title
+                sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, config.getColumn().size() - 1));
+                
+                // Adjust row index if title is added
+                if (config.getRowIndex() == 0) {
+                    config = SimpleExcelConfig.builder()
+                            .name(config.getName())
+                            .rowIndex(1)
+                            .columnIndex(config.getColumnIndex())
+                            .column(config.getColumn())
+                            .sql(config.getSql())
+                            .build();
+                }
+            }
+            
             writeHeader(sheet, config);
+            
+            // Add some instruction text below the header (optional)
+            Row instructionRow = sheet.createRow(config.getRowIndex() + 1);
+            Cell instructionCell = instructionRow.createCell(0);
+            instructionCell.setCellValue("Enter data below this row");
+            
+            CellStyle instructionStyle = workbook.createCellStyle();
+            Font instructionFont = workbook.createFont();
+            instructionFont.setItalic(true);
+            instructionStyle.setFont(instructionFont);
+            instructionCell.setCellStyle(instructionStyle);
+            
             return writeWorkbook(workbook);
         } catch (IOException e) {
             log.error("Error generating Excel template", e);
@@ -214,11 +295,34 @@ public class ExcelServiceImpl implements ExcelService {
 
     private void writeHeader(Sheet sheet, SimpleExcelConfig config) {
         Row headerRow = sheet.createRow(config.getRowIndex());
+        
+        // Create cell style for headers
+        Workbook workbook = sheet.getWorkbook();
+        org.apache.poi.ss.usermodel.CellStyle headerStyle = workbook.createCellStyle();
+        org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerFont.setFontHeightInPoints((short) 12); // Slightly larger font
+        headerStyle.setFont(headerFont);
+        
+        // Optional: Add background color and border if desired
+        headerStyle.setFillForegroundColor(org.apache.poi.ss.usermodel.IndexedColors.GREY_25_PERCENT.getIndex());
+        headerStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
+        headerStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+        headerStyle.setBorderTop(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+        headerStyle.setBorderLeft(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+        headerStyle.setBorderRight(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+        headerStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER);
 
         int columnIndex = config.getColumnIndex();
         for (SimpleExcelConfig.ColumnMapping mapping : config.getColumn()) {
             Cell cell = headerRow.createCell(columnIndex++);
             cell.setCellValue(mapping.getHeaderExcel());
+            cell.setCellStyle(headerStyle);
+        }
+        
+        // Auto-size columns for better readability
+        for (int i = config.getColumnIndex(); i < columnIndex; i++) {
+            sheet.autoSizeColumn(i);
         }
     }
 
