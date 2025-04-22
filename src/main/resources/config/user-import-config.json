@@ -1,6 +1,6 @@
 {
   "name": "Users",
-  "rowIndex": 1,
+  "rowIndex": 0,
   "columnIndex": 0,
   "column": [
     {
@@ -60,13 +60,6 @@
       "required": false,
       "type": "DATE",
       "format": "yyyy-MM-dd"
-    },
-    {
-      "headerExcel": "Roles",
-      "field": "roles",
-      "required": true,
-      "multiple": true,
-      "type": "STRING"
     },
     {
       "headerExcel": "Code",

@@ -31,9 +31,10 @@ spring:
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     #      dialect: org.hibernate.dialect.MySQLDialect
     database: mysql
+    generate-ddl: true
 #    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
 #    properties:
 #      javax:
@@ -52,4 +53,4 @@ jwt:
 # Application specific configuration
 app:
   init:
-    create-sample-data: false # Set to false to disable sample data creation
+#    create-sample-data: true # Set to false to disable sample data creation
