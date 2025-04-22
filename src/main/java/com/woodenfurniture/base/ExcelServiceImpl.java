@@ -118,42 +118,39 @@ public class ExcelServiceImpl implements ExcelService {
         
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet(config.getName());
-
-            // Create header row with an additional "Result" column
-            Row headerRow = sheet.createRow(config.getRowIndex());
-            int columnIndex = config.getColumnIndex();
             
-            // Create cell style for headers
-            CellStyle headerStyle = workbook.createCellStyle();
-            Font headerFont = workbook.createFont();
-            headerFont.setBold(true);
-            headerFont.setFontHeightInPoints((short) 12); // Slightly larger font
-            headerStyle.setFont(headerFont);
+            // Add an extra column for results
+            SimpleExcelConfig modifiedConfig = SimpleExcelConfig.builder()
+                    .name(config.getName())
+                    .rowIndex(config.getRowIndex())
+                    .columnIndex(config.getColumnIndex())
+                    .column(config.getColumn())
+                    .sql(config.getSql())
+                    .build();
+
+            // Write the header, which will include the title based on the config name
+            writeHeader(sheet, modifiedConfig);
             
-            // Optional: Add background color and border
-            headerStyle.setFillForegroundColor(org.apache.poi.ss.usermodel.IndexedColors.GREY_25_PERCENT.getIndex());
-            headerStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
-            headerStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-            headerStyle.setBorderTop(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-            headerStyle.setBorderLeft(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-            headerStyle.setBorderRight(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-            headerStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER);
-
-            for (SimpleExcelConfig.ColumnMapping mapping : config.getColumn()) {
-                Cell cell = headerRow.createCell(columnIndex++);
-                cell.setCellValue(mapping.getHeaderExcel());
-                cell.setCellStyle(headerStyle);
-            }
-
             // Add the Result column header
-            Cell resultHeaderCell = headerRow.createCell(columnIndex);
+            Row headerRow = sheet.getRow(config.getRowIndex());
+            int resultColumnIndex = config.getColumnIndex() + config.getColumn().size();
+            Cell resultHeaderCell = headerRow.createCell(resultColumnIndex);
             resultHeaderCell.setCellValue("Result");
-            resultHeaderCell.setCellStyle(headerStyle);
             
-            // Auto-size columns
-            for (int i = config.getColumnIndex(); i <= columnIndex; i++) {
-                sheet.autoSizeColumn(i);
+            // Get the header style from other cells
+            if (headerRow.getCell(config.getColumnIndex()) != null) {
+                resultHeaderCell.setCellStyle(headerRow.getCell(config.getColumnIndex()).getCellStyle());
+            } else {
+                // Create style if needed
+                CellStyle headerStyle = workbook.createCellStyle();
+                Font headerFont = workbook.createFont();
+                headerFont.setBold(true);
+                headerStyle.setFont(headerFont);
+                resultHeaderCell.setCellStyle(headerStyle);
             }
+            
+            // Auto-size the result column
+            sheet.autoSizeColumn(resultColumnIndex);
 
             // Write data with results
             writeDataWithResults(sheet, data, config, results);
@@ -184,40 +181,24 @@ public class ExcelServiceImpl implements ExcelService {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet(config.getName());
             
-            // Add a title row if config name is available
-            if (config.getName() != null && !config.getName().isEmpty()) {
-                Row titleRow = sheet.createRow(0);
-                Cell titleCell = titleRow.createCell(0);
-                titleCell.setCellValue(config.getName() + " Template");
-                
-                // Create title style
-                CellStyle titleStyle = workbook.createCellStyle();
-                Font titleFont = workbook.createFont();
-                titleFont.setBold(true);
-                titleFont.setFontHeightInPoints((short) 14);
-                titleStyle.setFont(titleFont);
-                titleCell.setCellStyle(titleStyle);
-                
-                // Merge cells for title
-                sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, config.getColumn().size() - 1));
-                
-                // Adjust row index if title is added
-                if (config.getRowIndex() == 0) {
-                    config = SimpleExcelConfig.builder()
-                            .name(config.getName())
-                            .rowIndex(1)
-                            .columnIndex(config.getColumnIndex())
-                            .column(config.getColumn())
-                            .sql(config.getSql())
-                            .build();
-                }
+            // Ensure the config has a proper row index to accommodate the title
+            // If rowIndex is 0, set it to 1 so there's room for the title
+            if (config.getRowIndex() == 0 && config.getName() != null && !config.getName().isEmpty()) {
+                config = SimpleExcelConfig.builder()
+                        .name(config.getName())
+                        .rowIndex(1)
+                        .columnIndex(config.getColumnIndex())
+                        .column(config.getColumn())
+                        .sql(config.getSql())
+                        .build();
             }
             
+            // Use our standard header method which will handle the title
             writeHeader(sheet, config);
             
             // Add some instruction text below the header (optional)
             Row instructionRow = sheet.createRow(config.getRowIndex() + 1);
-            Cell instructionCell = instructionRow.createCell(0);
+            Cell instructionCell = instructionRow.createCell(config.getColumnIndex());
             instructionCell.setCellValue("Enter data below this row");
             
             CellStyle instructionStyle = workbook.createCellStyle();
@@ -225,6 +206,15 @@ public class ExcelServiceImpl implements ExcelService {
             instructionFont.setItalic(true);
             instructionStyle.setFont(instructionFont);
             instructionCell.setCellStyle(instructionStyle);
+            
+            // Merge cells for the instruction text
+            int lastColumn = config.getColumnIndex() + config.getColumn().size() - 1;
+            sheet.addMergedRegion(new CellRangeAddress(
+                    config.getRowIndex() + 1,  // first row
+                    config.getRowIndex() + 1,  // last row
+                    config.getColumnIndex(),   // first column
+                    lastColumn                 // last column
+            ));
             
             return writeWorkbook(workbook);
         } catch (IOException e) {
@@ -294,17 +284,47 @@ public class ExcelServiceImpl implements ExcelService {
     }
 
     private void writeHeader(Sheet sheet, SimpleExcelConfig config) {
+        Workbook workbook = sheet.getWorkbook();
+        
+        // Calculate last column for spanning elements
+        int lastColumn = config.getColumnIndex() + config.getColumn().size() - 1;
+        
+        // Create title row if a name is provided in the config
+        if (config.getName() != null && !config.getName().isEmpty()) {
+            // Create a row for the title (one row above the header row)
+            Row titleRow = sheet.createRow(config.getRowIndex() - 1);
+            Cell titleCell = titleRow.createCell(config.getColumnIndex());
+            titleCell.setCellValue(config.getName());
+            
+            // Create title style with bold, larger font
+            CellStyle titleStyle = workbook.createCellStyle();
+            Font titleFont = workbook.createFont();
+            titleFont.setBold(true);
+            titleFont.setFontHeightInPoints((short) 14);
+            titleStyle.setFont(titleFont);
+            titleStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER);
+            titleCell.setCellStyle(titleStyle);
+            
+            // Merge cells for the title across all columns
+            sheet.addMergedRegion(new CellRangeAddress(
+                    config.getRowIndex() - 1,  // first row
+                    config.getRowIndex() - 1,  // last row
+                    config.getColumnIndex(),   // first column
+                    lastColumn                 // last column
+            ));
+        }
+        
+        // Create header row for column names
         Row headerRow = sheet.createRow(config.getRowIndex());
         
         // Create cell style for headers
-        Workbook workbook = sheet.getWorkbook();
-        org.apache.poi.ss.usermodel.CellStyle headerStyle = workbook.createCellStyle();
-        org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
+        CellStyle headerStyle = workbook.createCellStyle();
+        Font headerFont = workbook.createFont();
         headerFont.setBold(true);
         headerFont.setFontHeightInPoints((short) 12); // Slightly larger font
         headerStyle.setFont(headerFont);
         
-        // Optional: Add background color and border if desired
+        // Optional: Add background color and border
         headerStyle.setFillForegroundColor(org.apache.poi.ss.usermodel.IndexedColors.GREY_25_PERCENT.getIndex());
         headerStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
         headerStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
@@ -321,7 +341,7 @@ public class ExcelServiceImpl implements ExcelService {
         }
         
         // Auto-size columns for better readability
-        for (int i = config.getColumnIndex(); i < columnIndex; i++) {
+        for (int i = config.getColumnIndex(); i <= lastColumn; i++) {
             sheet.autoSizeColumn(i);
         }
     }
