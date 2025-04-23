@@ -2,125 +2,152 @@ package com.woodenfurniture.base;
 
 import com.woodenfurniture.config.excel.SimpleExcelConfig;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
- * Helper class for importing Excel files and processing validation results
+ * Helper class for Excel import operations including natural ID support.
  */
 @Slf4j
 public class ExcelImportHelper {
 
     /**
-     * Process Excel file, import data, validate it, and add a Result column
+     * Process entities for import, updating existing records if natural IDs match.
      *
-     * @param file             The uploaded Excel file
-     * @param workbook         The POI workbook loaded from the file
-     * @param config           The Excel configuration
-     * @param entities         The list of entities parsed from the Excel
-     * @param validationResults The validation results for each entity
-     * @return ByteArrayOutputStream with the modified Excel file
-     * @throws IOException If there's an error processing the file
+     * @param entities     List of entities from the Excel file
+     * @param config       Excel configuration defining natural ID fields
+     * @param repository   Repository for database operations
+     * @param <T>          Entity type
+     * @return Map of processed entities (original entity → updated/new entity)
      */
-    public static <T> ByteArrayOutputStream processImportFile(
-            MultipartFile file,
-            Workbook workbook,
-            SimpleExcelConfig config,
-            List<T> entities,
-            Map<T, String> validationResults) throws IOException {
+    public static <T extends BaseEntity> Map<T, T> processEntitiesWithNaturalId(
+            List<T> entities, 
+            SimpleExcelConfig config, 
+            JpaRepository<T, ?> repository) {
         
-        Sheet sheet = workbook.getSheetAt(0);
+        Map<T, T> processedEntities = new HashMap<>();
+        List<SimpleExcelConfig.ColumnMapping> naturalIdFields = getNaturalIdFields(config);
         
-        // Debug information
-        log.info("Processing Excel file: {}", file.getOriginalFilename());
-        log.info("Number of rows in sheet: {}", sheet.getPhysicalNumberOfRows());
-        log.info("Number of entities: {}", entities.size());
+        if (naturalIdFields.isEmpty()) {
+            // No natural ID fields defined, just use the imported entities as-is
+            entities.forEach(entity -> processedEntities.put(entity, entity));
+            return processedEntities;
+        }
         
-        // Check if there's data in the file
-        if (sheet.getPhysicalNumberOfRows() == 0) {
-            // Create header row if the sheet is empty
-            Row headerRow = sheet.createRow(0);
-            
-            // Add column headers from config
-            int colIndex = 0;
-            for (SimpleExcelConfig.ColumnMapping column : config.getColumn()) {
-                Cell cell = headerRow.createCell(colIndex++);
-                cell.setCellValue(column.getHeaderExcel());
-            }
-            
-            // Add Result column header
-            Cell resultCell = headerRow.createCell(colIndex);
-            resultCell.setCellValue("Result");
-        } else {
-            // Get the existing first row (assume it's the header)
-            Row headerRow = sheet.getRow(0);
-            if (headerRow != null) {
-                // Add Result column header
-                int lastColIndex = headerRow.getLastCellNum();
-                if (lastColIndex == -1) lastColIndex = 0;
-                Cell resultCell = headerRow.createCell(lastColIndex);
-                resultCell.setCellValue("Result");
+        for (T entity : entities) {
+            try {
+                // Try to find an existing entity by natural ID
+                Optional<T> existingEntity = findByNaturalId(entity, naturalIdFields, repository);
                 
-                // Add validation results to data rows
-                int entityIndex = 0;
-                for (int i = 1; i < sheet.getPhysicalNumberOfRows() && entityIndex < entities.size(); i++) {
-                    Row dataRow = sheet.getRow(i);
-                    if (dataRow == null) continue;
-                    
-                    // Debug logging
-                    log.info("Processing row {}", i);
-                    for (int j = 0; j < dataRow.getLastCellNum(); j++) {
-                        Cell cell = dataRow.getCell(j);
-                        if (cell != null) {
-                            log.info("  Cell[{}] = {}", j, getCellValueAsString(cell));
-                        }
-                    }
-                    
-                    T entity = entities.get(entityIndex++);
-                    Cell resultDataCell = dataRow.createCell(lastColIndex);
-                    
-                    if (validationResults.containsKey(entity)) {
-                        resultDataCell.setCellValue(validationResults.get(entity));
-                    } else {
-                        resultDataCell.setCellValue("Success");
-                    }
+                if (existingEntity.isPresent()) {
+                    // Update the existing entity with new values
+                    T updated = updateExistingEntity(existingEntity.get(), entity, config);
+                    processedEntities.put(entity, updated);
+                } else {
+                    // No existing entity found, use the new one
+                    processedEntities.put(entity, entity);
+                }
+            } catch (Exception e) {
+                log.error("Error processing entity for natural ID: {}", e.getMessage(), e);
+                processedEntities.put(entity, entity); // Fall back to using the original entity
+            }
+        }
+        
+        return processedEntities;
+    }
+    
+    /**
+     * Get the list of fields that are marked as natural IDs in the configuration.
+     *
+     * @param config Excel configuration
+     * @return List of natural ID field mappings
+     */
+    private static List<SimpleExcelConfig.ColumnMapping> getNaturalIdFields(SimpleExcelConfig config) {
+        List<SimpleExcelConfig.ColumnMapping> naturalIdFields = new ArrayList<>();
+        
+        if (config.getColumn() != null) {
+            for (SimpleExcelConfig.ColumnMapping mapping : config.getColumn()) {
+                if (mapping.isNaturalId()) {
+                    naturalIdFields.add(mapping);
                 }
             }
         }
         
-        // Write the modified workbook to a byte array
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        workbook.write(outputStream);
-        return outputStream;
+        return naturalIdFields;
     }
     
     /**
-     * Get cell value as string for logging
+     * Find an existing entity by natural ID fields.
+     *
+     * @param entity           Entity to find
+     * @param naturalIdFields  List of natural ID field mappings
+     * @param repository       Repository for database operations
+     * @param <T>              Entity type
+     * @return Optional containing the existing entity if found
+     * @throws Exception if an error occurs
      */
-    private static String getCellValueAsString(Cell cell) {
-        if (cell == null) return "null";
+    private static <T> Optional<T> findByNaturalId(
+            T entity, 
+            List<SimpleExcelConfig.ColumnMapping> naturalIdFields, 
+            JpaRepository<T, ?> repository) throws Exception {
         
-        switch (cell.getCellType()) {
-            case STRING:
-                return cell.getStringCellValue();
-            case NUMERIC:
-                return Double.toString(cell.getNumericCellValue());
-            case BOOLEAN:
-                return Boolean.toString(cell.getBooleanCellValue());
-            case FORMULA:
-                return cell.getCellFormula();
-            case BLANK:
-                return "[BLANK]";
-            default:
-                return "[" + cell.getCellType() + "]";
+        // Build an example matcher based on natural ID fields
+        ExampleMatcher matcher = ExampleMatcher.matching();
+        
+        // Create a probe instance of the same class
+        @SuppressWarnings("unchecked")
+        T probe = (T) entity.getClass().getDeclaredConstructor().newInstance();
+        
+        // Set the natural ID fields on the probe
+        for (SimpleExcelConfig.ColumnMapping mapping : naturalIdFields) {
+            Field field = entity.getClass().getDeclaredField(mapping.getField());
+            field.setAccessible(true);
+            Object value = field.get(entity);
+            field.set(probe, value);
+            
+            // Customize the matcher for this field
+            matcher = matcher.withMatcher(mapping.getField(), 
+                    match -> match.exact());
         }
+        
+        // Find by example using the probe and matcher
+        Example<T> example = Example.of(probe, matcher);
+        return repository.findOne(example);
+    }
+    
+    /**
+     * Update an existing entity with values from a new entity.
+     *
+     * @param existingEntity Existing entity from the database
+     * @param newEntity      New entity from the Excel file
+     * @param config         Excel configuration
+     * @param <T>            Entity type
+     * @return Updated entity
+     * @throws Exception if an error occurs
+     */
+    private static <T> T updateExistingEntity(T existingEntity, T newEntity, SimpleExcelConfig config) throws Exception {
+        // Copy all non-null fields from the new entity to the existing entity
+        // except for ID, UUID, created date, and other system fields
+        
+        for (SimpleExcelConfig.ColumnMapping mapping : config.getColumn()) {
+            Field field = newEntity.getClass().getDeclaredField(mapping.getField());
+            field.setAccessible(true);
+            Object value = field.get(newEntity);
+            
+            // Only update if the value is not null
+            if (value != null) {
+                field.set(existingEntity, value);
+            }
+        }
+        
+        return existingEntity;
     }
 }

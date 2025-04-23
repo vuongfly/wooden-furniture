@@ -186,4 +186,22 @@ public abstract class BaseController<T extends BaseEntity, ID, Req extends BaseR
                 .contentLength(outputStream.size())
                 .body(resource);
     }
+    
+    @Override
+    public ResponseEntity<Resource> exportForImport(
+            @RequestParam(required = false) BaseSearchRequest searchTerm,
+            Pageable pageable) {
+        ByteArrayOutputStream outputStream = service.exportForImport(searchTerm, pageable);
+        ByteArrayResource resource = new ByteArrayResource(outputStream.toByteArray());
+
+        // Generate filename with entity name prefix and date postfix
+        String filename = generateFileName("for_import");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .contentLength(outputStream.size())
+                .body(resource);
+    }
 }

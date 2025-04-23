@@ -181,12 +181,13 @@ public class ExcelServiceImpl implements ExcelService {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet(config.getName());
             
-            // Ensure the config has a proper row index to accommodate the title
-            // If rowIndex is 0, set it to 1 so there's room for the title
-            if (config.getRowIndex() == 0 && config.getName() != null && !config.getName().isEmpty()) {
+            // Ensure the config has a proper row index
+            // We no longer need to adjust for title space since writeHeader now safely handles row 0
+            // Just ensure rowIndex is never negative
+            if (config.getRowIndex() < 0) {
                 config = SimpleExcelConfig.builder()
                         .name(config.getName())
-                        .rowIndex(1)
+                        .rowIndex(0)
                         .columnIndex(config.getColumnIndex())
                         .column(config.getColumn())
                         .sqlFilePath(config.getSqlFilePath())
@@ -196,25 +197,15 @@ public class ExcelServiceImpl implements ExcelService {
             // Use our standard header method which will handle the title
             writeHeader(sheet, config);
             
-            // Add some instruction text below the header (optional)
-            Row instructionRow = sheet.createRow(config.getRowIndex() + 1);
-            Cell instructionCell = instructionRow.createCell(config.getColumnIndex());
-            instructionCell.setCellValue("Enter data below this row");
-            
-            CellStyle instructionStyle = workbook.createCellStyle();
-            Font instructionFont = workbook.createFont();
-            instructionFont.setItalic(true);
-            instructionStyle.setFont(instructionFont);
-            instructionCell.setCellStyle(instructionStyle);
-            
-            // Merge cells for the instruction text
-            int lastColumn = config.getColumnIndex() + config.getColumn().size() - 1;
-            sheet.addMergedRegion(new CellRangeAddress(
-                    config.getRowIndex() + 1,  // first row
-                    config.getRowIndex() + 1,  // last row
-                    config.getColumnIndex(),   // first column
-                    lastColumn                 // last column
-            ));
+            // Auto-size columns for better readability
+            int columnCount = config.getColumn().size();
+            for (int i = config.getColumnIndex(); i < config.getColumnIndex() + columnCount; i++) {
+                sheet.autoSizeColumn(i);
+                
+                // Add a bit of extra width for better readability (10% extra)
+                int currentWidth = sheet.getColumnWidth(i);
+                sheet.setColumnWidth(i, (int)(currentWidth * 1.1));
+            }
             
             return writeWorkbook(workbook);
         } catch (IOException e) {
@@ -289,8 +280,9 @@ public class ExcelServiceImpl implements ExcelService {
         // Calculate last column for spanning elements
         int lastColumn = config.getColumnIndex() + config.getColumn().size() - 1;
         
-        // Create title row if a name is provided in the config
-        if (config.getName() != null && !config.getName().isEmpty()) {
+        // Create title row if a name is provided in the config and if rowIndex > 0
+        // to ensure we never try to create a row with negative index
+        if (config.getName() != null && !config.getName().isEmpty() && config.getRowIndex() > 0) {
             // Create a row for the title (one row above the header row)
             Row titleRow = sheet.createRow(config.getRowIndex() - 1);
             Cell titleCell = titleRow.createCell(config.getColumnIndex());

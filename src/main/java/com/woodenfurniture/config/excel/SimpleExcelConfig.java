@@ -70,6 +70,12 @@ public class SimpleExcelConfig {
          * Whether the field must be unique
          */
         private boolean unique;
+        
+        /**
+         * Whether the field is part of natural ID for updates
+         * If true, this field will be used to find existing records during import
+         */
+        private boolean naturalId;
 
         /**
          * Whether the field can have multiple values

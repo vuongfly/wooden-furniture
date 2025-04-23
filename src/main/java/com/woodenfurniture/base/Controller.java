@@ -67,4 +67,13 @@ public interface Controller<T extends BaseEntity, ID, Req extends BaseRequest<T>
      */
     @GetMapping("/template")
     ResponseEntity<Resource> generateTemplate();
-} 
+    
+    /**
+     * Export data in import template format for editing and re-import.
+     * This allows users to export data, modify it, and then import it back.
+     */
+    @GetMapping("/export-for-import")
+    ResponseEntity<Resource> exportForImport(
+            @RequestParam(required = false) BaseSearchRequest searchTerm,
+            Pageable pageable);
+}

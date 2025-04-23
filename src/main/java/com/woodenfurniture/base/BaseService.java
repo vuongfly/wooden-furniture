@@ -111,4 +111,14 @@ public interface BaseService<T extends BaseEntity, ID, R extends BaseRequest<T>,
      * @return Excel template as ByteArrayOutputStream
      */
     ByteArrayOutputStream generateTemplate();
+    
+    /**
+     * Export data in import template format for editing and re-import.
+     * This allows users to export data, modify it, and then import it back.
+     * 
+     * @param searchRequest Search criteria for filtering data
+     * @param pageable Pagination information
+     * @return Excel file with data in import format
+     */
+    ByteArrayOutputStream exportForImport(BaseSearchRequest searchRequest, Pageable pageable);
 } 

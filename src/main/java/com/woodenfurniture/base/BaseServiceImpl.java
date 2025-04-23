@@ -236,10 +236,70 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
                     }
                 }
                 
+                // Process entities with natural ID support (update existing records if natural ID matches)
+                Map<T, T> processedEntities = new HashMap<>();
+                List<T> validEntities = entities.stream()
+                        .filter(entity -> !validationResults.containsKey(entity))
+                        .toList();
+                
+                for (T entity : validEntities) {
+                    try {
+                        boolean hasNaturalId = false;
+                        List<SimpleExcelConfig.ColumnMapping> naturalIdFields = new ArrayList<>();
+                        
+                        // Find natural ID fields from config
+                        for (SimpleExcelConfig.ColumnMapping mapping : config.getColumn()) {
+                            if (mapping.isNaturalId()) {
+                                naturalIdFields.add(mapping);
+                                hasNaturalId = true;
+                            }
+                        }
+                        
+                        if (hasNaturalId) {
+                            // Try to find existing entity by natural ID fields
+                            T existingEntity = null;
+                            try {
+                                existingEntity = findByNaturalId(entity, naturalIdFields);
+                            } catch (IllegalAccessException e) {
+                                log.error("Error accessing field in entity {}: {}", 
+                                        entity.getClass().getSimpleName(), e.getMessage());
+                            }
+                            
+                            if (existingEntity != null) {
+                                // Found existing entity - update it with values from imported entity
+                                for (SimpleExcelConfig.ColumnMapping mapping : config.getColumn()) {
+                                    if (!mapping.isNaturalId()) { // Don't overwrite natural ID fields
+                                        String fieldName = mapping.getField();
+                                        Object value = getFieldValue(entity, fieldName);
+                                        
+                                        if (value != null) {
+                                            // Set the non-natural ID field on existing entity
+                                            java.lang.reflect.Field field = existingEntity.getClass().getDeclaredField(fieldName);
+                                            field.setAccessible(true);
+                                            field.set(existingEntity, value);
+                                        }
+                                    }
+                                }
+                                
+                                // Use the existing entity (with updated fields)
+                                processedEntities.put(entity, existingEntity);
+                                continue;
+                            }
+                        }
+                        
+                        // No natural ID match or no natural ID fields defined - use original entity
+                        processedEntities.put(entity, entity);
+                    } catch (Exception e) {
+                        log.error("Error processing entity with natural ID: {}", e.getMessage(), e);
+                        processedEntities.put(entity, entity); // Use original entity as fallback
+                    }
+                }
+                
                 // Save valid entities to the database
                 for (T entity : entities) {
                     if (!validationResults.containsKey(entity)) {
-                        repository.save(entity);
+                        T entityToSave = processedEntities.getOrDefault(entity, entity);
+                        repository.save(entityToSave);
                     }
                 }
                 
@@ -452,6 +512,55 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
     public ByteArrayOutputStream generateTemplate() {
         String configPath = getImportConfigPath();
         return excelService.generateTemplateFromConfigFile(configPath);
+    }
+    
+    /**
+     * Export data in import template format for editing and re-import
+     */
+    @Override
+    public ByteArrayOutputStream exportForImport(BaseSearchRequest searchRequest, Pageable pageable) {
+        try {
+            // Get the import configuration file path (not export configuration)
+            String configPath = getImportConfigPath();
+            
+            // Get the configuration for import format
+            SimpleExcelConfig config = excelConfigReader.readConfig(configPath);
+            
+            // Safety check: ensure rowIndex is at least 0 to avoid Excel errors
+            if (config.getRowIndex() < 0) {
+                // Create a new config with valid rowIndex
+                config = SimpleExcelConfig.builder()
+                        .name(config.getName())
+                        .rowIndex(0) // Set minimum valid value
+                        .columnIndex(config.getColumnIndex())
+                        .column(config.getColumn())
+                        .sqlFilePath(config.getSqlFilePath())
+                        .build();
+            }
+            
+            // Get data based on search criteria
+            List<T> entities;
+            if (searchRequest != null) {
+                Specification<T> spec = createSearchSpecification(searchRequest);
+                if (pageable != null) {
+                    Page<T> page = repository.findAll(spec, pageable);
+                    entities = page.getContent();
+                } else {
+                    entities = repository.findAll(spec);
+                }
+            } else if (pageable != null) {
+                Page<T> page = repository.findByIsDeletedFalse(pageable);
+                entities = page.getContent();
+            } else {
+                entities = repository.findByIsDeletedFalse();
+            }
+            
+            // Export data to Excel directly with our config object to ensure rowIndex is valid
+            return excelService.exportToExcel(entities, config);
+        } catch (Exception e) {
+            log.error("Error exporting data for import format for {}: {}", entityClass.getSimpleName(), e.getMessage(), e);
+            throw new RuntimeException("Failed to export data in import format: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -760,6 +869,57 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
     protected String validateEntity(T entity) {
         // This method should be overridden by subclasses to implement custom validation
         return null;
+    }
+    
+    /**
+     * Find an existing entity by natural ID fields
+     *
+     * @param entity Entity with natural ID values to search for
+     * @param naturalIdFields List of natural ID field mappings from the config
+     * @return Existing entity if found, null otherwise
+     * @throws IllegalAccessException If field access is denied
+     */
+    protected T findByNaturalId(T entity, List<SimpleExcelConfig.ColumnMapping> naturalIdFields) 
+            throws IllegalAccessException {
+        if (naturalIdFields == null || naturalIdFields.isEmpty()) {
+            return null;
+        }
+        
+        try {
+            // Build a JPA Specification to find by natural ID fields
+            Specification<T> spec = (root, query, cb) -> {
+                List<Predicate> predicates = new ArrayList<>();
+                
+                // Add predicates for each natural ID field
+                for (SimpleExcelConfig.ColumnMapping mapping : naturalIdFields) {
+                    String fieldName = mapping.getField();
+                    Object value;
+                    try {
+                        java.lang.reflect.Field field = entity.getClass().getDeclaredField(fieldName);
+                        field.setAccessible(true);
+                        value = field.get(entity);
+                        
+                        if (value != null) {
+                            predicates.add(cb.equal(root.get(fieldName), value));
+                        }
+                    } catch (NoSuchFieldException | IllegalAccessException e) {
+                        log.warn("Field '{}' not found in entity {}: {}", 
+                                fieldName, entity.getClass().getSimpleName(), e.getMessage());
+                    }
+                }
+                
+                // Add predicate for non-deleted entities
+                predicates.add(cb.equal(root.get("isDeleted"), false));
+                
+                return cb.and(predicates.toArray(new Predicate[0]));
+            };
+            
+            // Execute the query
+            return repository.findOne(spec).orElse(null);
+        } catch (Exception e) {
+            log.error("Error finding entity by natural ID: {}", e.getMessage(), e);
+            return null;
+        }
     }
 
     /**
