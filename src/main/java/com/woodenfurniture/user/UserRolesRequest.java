@@ -1,19 +1,19 @@
 package com.woodenfurniture.user;
 
-import jakarta.validation.constraints.NotEmpty;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 
-/**
- * Request for adding or removing roles from a user
- */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserRolesRequest {
-    @NotEmpty(message = "Role names are required")
-    private List<String> roleNames;
+    List<String> roleNames;
 }

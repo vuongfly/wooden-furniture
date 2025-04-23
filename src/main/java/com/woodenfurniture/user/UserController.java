@@ -56,4 +56,26 @@ public interface UserController extends Controller<User, Long, UserRequest, User
     ResponseEntity<ApiResponse<UserResponse>> removeRolesFromUser(
             @PathVariable Long id, 
             @RequestBody UserRolesRequest request);
+    
+    /**
+     * Change password for a user
+     * 
+     * @param id User ID
+     * @param request Password change request containing old and new passwords
+     * @return Updated user response
+     */
+    @PostMapping("/{id}/change-password")
+    ResponseEntity<ApiResponse<UserResponse>> changePassword(
+            @PathVariable Long id,
+            @RequestBody PasswordChangeRequest request);
+    
+    /**
+     * Change password for the current authenticated user
+     * 
+     * @param request Password change request containing old and new passwords
+     * @return Updated user response
+     */
+    @PostMapping("/my-password")
+    ResponseEntity<ApiResponse<UserResponse>> changeMyPassword(
+            @RequestBody PasswordChangeRequest request);
 }

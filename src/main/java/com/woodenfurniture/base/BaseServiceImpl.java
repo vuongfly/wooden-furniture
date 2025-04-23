@@ -268,12 +268,14 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
                             if (existingEntity != null) {
                                 // Found existing entity - update it with values from imported entity
                                 for (SimpleExcelConfig.ColumnMapping mapping : config.getColumn()) {
-                                    if (!mapping.isNaturalId()) { // Don't overwrite natural ID fields
+                                    // Skip updating fields marked with skipUpdate=true or natural ID fields
+                                    if (!mapping.isNaturalId() && !mapping.isSkipUpdate()) {
                                         String fieldName = mapping.getField();
                                         Object value = getFieldValue(entity, fieldName);
                                         
+                                        // Only update fields that have a non-null value in the import data
                                         if (value != null) {
-                                            // Set the non-natural ID field on existing entity
+                                            // Set the field on existing entity
                                             java.lang.reflect.Field field = existingEntity.getClass().getDeclaredField(fieldName);
                                             field.setAccessible(true);
                                             field.set(existingEntity, value);
@@ -428,18 +430,24 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
                     }
                 } else if (fieldType.isEnum()) {
                     // Handle enum types (including Gender)
-                    String strValue = stringValue.toUpperCase();
-                    try {
-                        // Get enum value from string
-                        Object enumValue = fieldType.getDeclaredMethod("valueOf", String.class).invoke(null, strValue);
-                        field.set(obj, enumValue);
-                    } catch (Exception e) {
-                        log.warn("Failed to convert '{}' to enum type {}: {}", strValue, fieldType.getName(), e.getMessage());
-                        // Try to find a matching enum value (case-insensitive)
-                        for (Object enumConstant : fieldType.getEnumConstants()) {
-                            if (enumConstant.toString().equalsIgnoreCase(strValue)) {
-                                field.set(obj, enumConstant);
-                                break;
+                    // If value is already an enum of the correct type, use it directly
+                    if (value != null && fieldType.isInstance(value)) {
+                        field.set(obj, value);
+                    } else {
+                        // Convert string to enum
+                        String strValue = stringValue.toUpperCase();
+                        try {
+                            // Get enum value from string
+                            Object enumValue = fieldType.getDeclaredMethod("valueOf", String.class).invoke(null, strValue);
+                            field.set(obj, enumValue);
+                        } catch (Exception e) {
+                            log.warn("Failed to convert '{}' to enum type {}: {}", strValue, fieldType.getName(), e.getMessage());
+                            // Try to find a matching enum value (case-insensitive)
+                            for (Object enumConstant : fieldType.getEnumConstants()) {
+                                if (enumConstant.toString().equalsIgnoreCase(strValue)) {
+                                    field.set(obj, enumConstant);
+                                    break;
+                                }
                             }
                         }
                     }
@@ -830,6 +838,12 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
                         return String.format("%s must be a valid phone number. ", column.getHeaderExcel());
                     }
                     break;
+                case ENUM:
+                    // Enums are valid as either Enum instances or strings that can be converted to enums
+                    if (!(value instanceof Enum) && !(value instanceof String)) {
+                        return String.format("%s must be a valid enum value. ", column.getHeaderExcel());
+                    }
+                    break;
             }
         } catch (Exception e) {
             log.warn("Error validating field type: {}", e.getMessage());
@@ -841,6 +855,44 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
 
     protected String validateUniqueField(Object entity, String fieldName, Object value) {
         try {
+            // First, check if this is a natural ID field for an existing record
+            if (entity instanceof BaseEntity) {
+                BaseEntity baseEntity = (BaseEntity) entity;
+                
+                // If this entity has an ID, we might need to skip unique validation for this field
+                if (baseEntity.getId() != null) {
+                    // Check if this field is defined as a natural ID in any of our configs
+                    SimpleExcelConfig importConfig = excelConfigReader.readConfig(getImportConfigPath());
+                    boolean isNaturalId = importConfig.getColumn().stream()
+                            .anyMatch(col -> col.getField().equals(fieldName) && col.isNaturalId());
+                    
+                    if (isNaturalId) {
+                        // This is a natural ID field on an existing entity, so skip unique validation
+                        return null;
+                    }
+                    
+                    // We need to check if the existing entity already has this value,
+                    // and skip validation if it does
+                    try {
+                        // Find existing entity with this ID
+                        Object existingEntity = repository.findById((ID) baseEntity.getId()).orElse(null);
+                        if (existingEntity != null) {
+                            // Get current value for this field
+                            java.lang.reflect.Field field = existingEntity.getClass().getDeclaredField(fieldName);
+                            field.setAccessible(true);
+                            Object currentValue = field.get(existingEntity);
+                            
+                            // If current value is equal to new value, skip validation
+                            if (currentValue != null && currentValue.equals(value)) {
+                                return null;
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.warn("Error checking existing value for {}: {}", fieldName, e.getMessage());
+                    }
+                }
+            }
+            
             // Convert field name to method name (e.g., "username" -> "existsByUsername")
             String methodName = "existsBy" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
 
@@ -988,6 +1040,39 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID, Req extends Base
                     log.warn("Could not parse date '{}' for field {}: {}", stringValue, mapping.getField(), e.getMessage());
                 }
                 return rawValue;
+            case ENUM:
+                try {
+                    // Get the field to determine the enum type
+                    java.lang.reflect.Field field = entity.getClass()
+                        .getDeclaredField(mapping.getField());
+                    field.setAccessible(true);
+                    Class<?> fieldType = field.getType();
+                    
+                    // If it's not an enum type, just return the string value
+                    if (!fieldType.isEnum()) {
+                        return stringValue;
+                    }
+                    
+                    // Try to convert string to enum value
+                    try {
+                        // Handle enum - use valueOf method
+                        return Enum.valueOf((Class<Enum>) fieldType, stringValue.toUpperCase());
+                    } catch (IllegalArgumentException e) {
+                        // Try case-insensitive match
+                        for (Object enumConstant : fieldType.getEnumConstants()) {
+                            if (enumConstant.toString().equalsIgnoreCase(stringValue)) {
+                                return enumConstant;
+                            }
+                        }
+                        
+                        // If no match found, log warning and return raw value
+                        log.warn("Could not convert '{}' to enum type {}", stringValue, fieldType.getName());
+                        return rawValue;
+                    }
+                } catch (Exception e) {
+                    log.warn("Error processing enum field {}: {}", mapping.getField(), e.getMessage());
+                    return rawValue;
+                }
             default:
                 return rawValue;
         }

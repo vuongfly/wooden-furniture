@@ -213,6 +213,54 @@ public class UserServiceImpl extends BaseServiceImpl<User, Long, UserRequest, Us
         // Return response
         return mapper.toDto(user);
     }
+    
+    @Override
+    @Transactional
+    public UserResponse changePassword(Long userId, PasswordChangeRequest request) {
+        // Find existing user
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED));
+        
+        // Verify old password
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new AppException(ErrorCode.INVALID_PASSWORD);
+        }
+        
+        // Update password
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        
+        // Save user
+        user = userRepository.save(user);
+        
+        // Return response
+        return mapper.toDto(user);
+    }
+    
+    @Override
+    @Transactional
+    public UserResponse changeMyPassword(PasswordChangeRequest request) {
+        // Get current authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        
+        // Find user
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_EXISTED));
+        
+        // Verify old password
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new AppException(ErrorCode.INVALID_PASSWORD);
+        }
+        
+        // Update password
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        
+        // Save user
+        user = userRepository.save(user);
+        
+        // Return response
+        return mapper.toDto(user);
+    }
 
     @Override
     @SneakyThrows

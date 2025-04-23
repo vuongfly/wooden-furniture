@@ -14,14 +14,6 @@
       "regexErrorMessage": "Username must be 3-20 characters long and contain only letters, numbers, and underscores."
     },
     {
-      "headerExcel": "Password",
-      "field": "password",
-      "required": true,
-      "type": "STRING",
-      "regex": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
-      "regexErrorMessage": "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character."
-    },
-    {
       "headerExcel": "Name",
       "field": "name",
       "required": true,
@@ -45,9 +37,7 @@
       "headerExcel": "Gender",
       "field": "gender",
       "required": false,
-      "type": "STRING",
-      "regex": "^(MALE|FEMALE|OTHER)$",
-      "regexErrorMessage": "Gender must be one of: MALE, FEMALE, OTHER"
+      "type": "ENUM"
     },
     {
       "headerExcel": "Age",
@@ -61,13 +51,6 @@
       "required": false,
       "type": "DATE",
       "format": "yyyy-MM-dd"
-    },
-    {
-      "headerExcel": "Code",
-      "field": "code",
-      "required": false,
-      "unique": true,
-      "type": "STRING"
     }
   ]
 }

@@ -83,6 +83,12 @@ public class SimpleExcelConfig {
         private boolean multiple;
 
         /**
+         * Whether to skip updating this field during import
+         * If true, this field will not be updated when importing data
+         */
+        private boolean skipUpdate;
+
+        /**
          * Data type of the field
          */
         private FieldType type;
@@ -112,6 +118,7 @@ public class SimpleExcelConfig {
         DATE,
         BOOLEAN,
         EMAIL,
-        PHONE
+        PHONE,
+        ENUM
     }
 }

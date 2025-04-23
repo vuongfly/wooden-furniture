@@ -54,4 +54,21 @@ public interface UserService extends BaseService<User, Long, UserRequest, UserRe
      * @return Updated user response
      */
     UserResponse removeRolesFromUser(Long userId, List<String> roleNames);
+    
+    /**
+     * Change password for a user
+     * 
+     * @param userId User ID
+     * @param request Password change request
+     * @return Updated user response
+     */
+    UserResponse changePassword(Long userId, PasswordChangeRequest request);
+    
+    /**
+     * Change password for the current authenticated user
+     * 
+     * @param request Password change request
+     * @return Updated user response
+     */
+    UserResponse changeMyPassword(PasswordChangeRequest request);
 }

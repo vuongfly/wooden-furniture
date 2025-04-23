@@ -83,4 +83,33 @@ public class UserControllerImpl extends UserBaseController implements UserContro
                 .result(response)
                 .build());
     }
+    
+    @Override
+    @PostMapping("/{id}/change-password")
+    public ResponseEntity<ApiResponse<UserResponse>> changePassword(
+            @PathVariable Long id,
+            @RequestBody PasswordChangeRequest request) {
+        
+        UserResponse response = userService.changePassword(id, request);
+        
+        return ResponseEntity.ok(ApiResponse.<UserResponse>builder()
+                .code(200)
+                .message("Password changed successfully")
+                .result(response)
+                .build());
+    }
+    
+    @Override
+    @PostMapping("/my-password")
+    public ResponseEntity<ApiResponse<UserResponse>> changeMyPassword(
+            @RequestBody PasswordChangeRequest request) {
+        
+        UserResponse response = userService.changeMyPassword(request);
+        
+        return ResponseEntity.ok(ApiResponse.<UserResponse>builder()
+                .code(200)
+                .message("Password changed successfully")
+                .result(response)
+                .build());
+    }
 }
